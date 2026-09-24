@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "id.arka.app"
     compileSdk = 34
+    ndkVersion = "26.1.10909125"
     defaultConfig {
         applicationId = "id.arka.app"
         minSdk = 26
@@ -27,7 +28,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-ndkVersion = "26.1.10909125"
 }
 
 chaquopy {
