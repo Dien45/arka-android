@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Arka</title>
-  <link rel="stylesheet" href="/static/styles.css?v=preview24" />
+  <link rel="stylesheet" href="/static/styles.css?v=preview25" />
 </head>
 <body>
   <div id="app">
+    <div class="side-scrim" id="sideScrim"></div>
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="mark">A</div>
@@ -29,6 +30,7 @@
     <main class="main">
       <header class="topbar">
         <div class="crumbs">
+          <button class="btn ghost xs" id="menuBtn" type="button" title="Sesi">☰</button>
           <span class="session-title" id="sessionTitle" title="Klik untuk ganti nama">Pilih sesi</span>
           <button class="btn ghost xs" id="renameBtn" type="button">Rename</button>
           <span class="pill" id="demoPill" hidden>demo · tanpa API key</span>
@@ -45,9 +47,11 @@
               </div>
             </div>
           </div>
+          <button class="btn ghost" id="openSettingsTop" type="button">Pengaturan</button>
           <button class="btn ghost" id="copyChatBtn" type="button" title="Salin percakapan">Salin chat</button>
           <button class="btn ghost" id="undoBtn" type="button" title="Kembalikan file yang diubah AI pada giliran terakhir">Undo file</button>
           <button class="btn ghost" id="stopBtn" type="button" hidden>Stop</button>
+          <button class="btn ghost xs" id="moreBtn" type="button" title="Menu">⋮</button>
         </div>
       </header>
       <section class="workspace">
@@ -123,6 +127,7 @@
       <label>Folder proyek
         <input id="cfgWorkspace" placeholder="folder proyek" />
       </label>
+      <button class="btn ghost block" type="button" id="pickFolderBtn" style="margin: 0 0 8px;">Pilih folder…</button>
       <button class="btn ghost block" type="button" id="useAppFolder" style="margin: 0 0 10px;">Pakai folder aplikasi ini</button>
       <label>API base URL
         <input id="cfgBase" placeholder="https://api.openai.com/v1" />
@@ -158,6 +163,6 @@
     <iframe id="overlayFrame" title="overlay"></iframe>
   </div>
 
-  <script src="/static/app.js?v=preview24"></script>
-</body>
+  <script src="/static/app.js?v=preview25"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a403cf805f80d083',t:'MTc5MDI3NDEwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
