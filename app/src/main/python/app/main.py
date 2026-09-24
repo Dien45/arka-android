@@ -89,18 +89,35 @@ def get_settings() -> dict[str, Any]:
     return s
 
 
-@app.put("/api/settings")
+def _body_dict(body: Any) -> dict[str, Any]:
+    if hasattr(body, "model_dump"):
+        return body.model_dump()
+    if hasattr(body, "dict"):
+        return body.dict()
+    return {}
+
+
+@app.api_route("/api/settings", methods=["PUT", "POST"])
 def put_settings(body: SettingsIn) -> dict[str, Any]:
     from .agent import sanitize_model
 
-    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    patch = {k: v for k, v in _body_dict(body).items() if v is not None}
     if "model" in patch:
         patch["model"] = sanitize_model(str(patch["model"] or ""))
     if "workspace" in patch:
-        try:
-            patch["workspace"] = str(tools.resolve_workspace(patch["workspace"] or str(APP_DIR)))
-        except ValueError as e:
-            raise HTTPException(400, str(e)) from e
+        raw = str(patch.get("workspace") or "").strip()
+        if not raw:
+            patch.pop("workspace", None)
+        else:
+            p = Path(raw).expanduser()
+            try:
+                p.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                pass
+            try:
+                patch["workspace"] = str(tools.resolve_workspace(str(p)))
+            except ValueError as e:
+                raise HTTPException(400, str(e)) from e
     s = save_settings(patch)
     s["api_key_set"] = bool(s.get("api_key"))
     return s
