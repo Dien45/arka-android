@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Arka</title>
-  <link rel="stylesheet" href="/static/styles.css?v=preview25" />
+  <link rel="stylesheet" href="/static/styles.css?v=preview26" />
 </head>
 <body>
   <div id="app">
@@ -144,7 +144,8 @@
         <datalist id="modelDatalist"></datalist>
       </label>
       <button class="btn ghost block" type="button" id="loadModels" style="margin: 0 0 10px;">Muat daftar model dari API</button>
-      <p class="muted sm" id="cfgModelHint">Chip model di atas chat = sesi ini saja. Model di Pengaturan = default sesi baru. Ganti model di sesi lain tidak mengubah sesi yang sedang jalan.</p>
+      <div class="model-list settings-models" id="cfgModelBox"></div>
+      <p class="muted sm" id="cfgModelHint">Chip model di atas chat = sesi ini saja. Model di Pengaturan = default sesi baru.</p>
       <label>API key
         <input id="cfgKey" type="password" placeholder="sk-… (kosong = mode demo)" />
       </label>
@@ -163,6 +164,6 @@
     <iframe id="overlayFrame" title="overlay"></iframe>
   </div>
 
-  <script src="/static/app.js?v=preview25"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a403cf805f80d083',t:'MTc5MDI3NDEwNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+  <script src="/static/app.js?v=preview26"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a404c45a4e3cfcf6',t:'MTc5MDI4NDEzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
