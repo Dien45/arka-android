@@ -161,26 +161,38 @@ def parse_model_catalog(payload: Any) -> list[dict[str, str]]:
 
 
 async def _get_json(client: httpx.AsyncClient, url: str, headers: dict[str, str]) -> Any | None:
+    data, _err = await _get_json_ex(client, url, headers)
+    return data
+
+
+async def _get_json_ex(client: httpx.AsyncClient, url: str, headers: dict[str, str]) -> tuple[Any | None, str]:
     try:
         r = await client.get(url, headers=headers)
-    except httpx.HTTPError:
-        return None
+    except httpx.HTTPError as e:
+        return None, f"{url}: {e}"
     if r.status_code >= 400:
-        return None
+        snippet = (r.text or "")[:180].replace("\n", " ")
+        return None, f"{r.status_code} {url} {snippet}".strip()
     try:
-        return r.json()
+        return r.json(), ""
     except ValueError:
-        return None
+        return None, f"{url}: respons bukan JSON"
 
 
 async def fetch_model_catalog(settings: dict[str, Any]) -> list[dict[str, str]]:
+    catalog, _err = await fetch_models_with_status(settings)
+    return catalog
+
+
+async def fetch_models_with_status(settings: dict[str, Any]) -> tuple[list[dict[str, str]], str]:
     base = _normalize_base(settings.get("api_base") or "")
     if not base:
-        return []
+        return [], "API base kosong"
     origin = base[:-3] if base.endswith("/v1") else base
     headers = _api_headers(settings)
     catalog: list[dict[str, str]] = []
     seen: set[str] = set()
+    last_err = ""
 
     def add_rows(rows: list[dict[str, str]]) -> None:
         for m in rows:
@@ -189,24 +201,33 @@ async def fetch_model_catalog(settings: dict[str, Any]) -> list[dict[str, str]]:
             seen.add(m["id"])
             catalog.append(m)
 
-    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-        for url in (f"{base}/models", f"{origin}/v1/models"):
-            data = await _get_json(client, url, headers)
-            if data is not None:
-                add_rows(parse_model_catalog(data))
+    try:
+        async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
+            for url in (f"{base}/models", f"{origin}/v1/models", f"{origin}/api/models"):
+                data, err = await _get_json_ex(client, url, headers)
+                if err:
+                    last_err = err
+                if data is not None:
+                    add_rows(parse_model_catalog(data))
+                    if catalog:
+                        last_err = ""
+                        break
+            for url in (f"{base}/combos", f"{origin}/v1/combos", f"{origin}/api/combos"):
+                data, _err = await _get_json_ex(client, url, headers)
+                if data is None:
+                    continue
+                rows = parse_model_catalog(data)
+                for m in rows:
+                    m["type"] = "combo"
+                    add_rows([m])
                 break
-        for url in (f"{base}/combos", f"{origin}/v1/combos", f"{origin}/api/combos"):
-            data = await _get_json(client, url, headers)
-            if data is None:
-                continue
-            rows = parse_model_catalog(data)
-            for m in rows:
-                m["type"] = "combo"
-                add_rows([m])
-            break
+    except Exception as e:
+        last_err = str(e)
     combos = [m for m in catalog if m.get("type") == "combo"]
     rest = [m for m in catalog if m.get("type") != "combo"]
-    return combos + rest
+    if not catalog:
+        return [], last_err or f"Daftar kosong dari {base}"
+    return combos + rest, ""
 
 
 def resolve_model_id(requested: str, catalog: list[dict[str, str]]) -> str:
