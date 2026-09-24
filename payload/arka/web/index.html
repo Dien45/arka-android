@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arka</title>
+  <link rel="stylesheet" href="/static/styles.css?v=preview24" />
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="mark">A</div>
+        <div>
+          <div class="brand-name">Arka</div>
+          <div class="brand-sub">coding agent</div>
+        </div>
+      </div>
+      <button class="btn primary block" id="newSession">+ Sesi baru</button>
+      <div class="side-label">Sesi</div>
+      <div class="session-list" id="sessionList"></div>
+      <div class="side-foot">
+        <div class="ws-name" id="wsName" title="">folder proyek</div>
+        <button class="btn ghost block" id="openSettings">Pengaturan</button>
+      </div>
+    </aside>
+    <div class="gutter gutter-x" data-split="side" title="Seret: lebar sesi"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="crumbs">
+          <span class="session-title" id="sessionTitle" title="Klik untuk ganti nama">Pilih sesi</span>
+          <button class="btn ghost xs" id="renameBtn" type="button">Rename</button>
+          <span class="pill" id="demoPill" hidden>demo · tanpa API key</span>
+        </div>
+        <div class="top-actions">
+          <div class="model-wrap">
+            <button class="model-chip" id="modelChip" type="button" title="Pilih model">gpt-4o-mini ▾</button>
+            <div class="model-menu" id="modelMenu" hidden>
+              <input id="modelSearch" placeholder="Cari model OmniRoute…" autocomplete="off" />
+              <div class="model-list" id="modelList"></div>
+              <div class="model-menu-foot">
+                <button class="btn ghost xs" type="button" id="refreshModels">Muat daftar</button>
+                <span class="muted sm" id="modelStatus"></span>
+              </div>
+            </div>
+          </div>
+          <button class="btn ghost" id="copyChatBtn" type="button" title="Salin percakapan">Salin chat</button>
+          <button class="btn ghost" id="undoBtn" type="button" title="Kembalikan file yang diubah AI pada giliran terakhir">Undo file</button>
+          <button class="btn ghost" id="stopBtn" type="button" hidden>Stop</button>
+        </div>
+      </header>
+      <section class="workspace">
+        <div class="chat-col">
+          <div class="messages" id="messages"></div>
+          <div class="todos" id="todos" hidden></div>
+          <div class="attach-row" id="attachRow" hidden></div>
+          <form class="composer" id="composer">
+            <input type="file" id="filePick" multiple hidden />
+            <div class="composer-box">
+              <div id="prompt" class="prompt" contenteditable="true" role="textbox" data-placeholder="Tulis tugas, Ctrl+V tempel gambar, atau seret file…"></div>
+              <div class="composer-bar">
+                <button class="icon-btn" type="button" id="attachBtn" title="Lampirkan file">📎</button>
+                <button class="icon-btn" type="button" id="pasteImgBtn" title="Tempel gambar dari clipboard">📋</button>
+                <div class="mode-wrap">
+                  <button class="mode-chip" id="modeChip" type="button" title="Mode agen">Agent ▾</button>
+                  <div class="mode-menu" id="modeMenu" hidden>
+                    <button type="button" data-mode="plan">
+                      <b>Plan</b>
+                      <small>Rancang dulu, tidak ubah file</small>
+                    </button>
+                    <button type="button" data-mode="agent">
+                      <b>Agent</b>
+                      <small>Otonom, tools penuh, lanjut sendiri</small>
+                    </button>
+                    <button type="button" data-mode="build">
+                      <b>Build</b>
+                      <small>Tulis kode sampai proyek selesai</small>
+                    </button>
+                  </div>
+                </div>
+                <span class="composer-spacer"></span>
+                <button class="btn ghost send" type="button" id="continueBtn">Lanjutkan</button>
+                <button class="btn primary send" type="submit" id="sendBtn">Kirim</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+    <div class="gutter gutter-x" data-split="files" title="Seret: lebar preview"></div>
+
+    <aside class="files" id="filesPanel">
+      <div class="files-head">
+        <span>File</span>
+        <div class="file-actions">
+          <button class="btn ghost xs" id="refreshTree" type="button">Refresh</button>
+          <button class="btn ghost xs" id="expandPreview" type="button">Perbesar</button>
+        </div>
+      </div>
+      <div class="changed" id="changedFiles" hidden></div>
+      <div class="tree" id="tree"></div>
+      <div class="gutter gutter-y" data-split="preview" title="Seret: tinggi preview"></div>
+      <div class="preview-wrap">
+        <div class="preview-name" id="previewName">Preview file</div>
+        <div class="seg mini" id="viewSeg">
+          <button type="button" data-view="preview" class="on">Preview</button>
+          <button type="button" data-view="code">Kode</button>
+        </div>
+        <iframe class="preview-frame is-off" id="previewFrame" title="preview"></iframe>
+        <div class="preview-html is-off" id="previewHtml"></div>
+        <img class="preview-img is-off" id="previewImg" alt="" />
+        <div class="preview-md md is-off" id="previewMd"></div>
+        <pre class="preview" id="preview">Pilih file di daftar. Seret garis di tepi panel untuk ubah ukuran.</pre>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal" id="settingsModal" hidden>
+    <div class="sheet">
+      <h2>Pengaturan</h2>
+      <p class="muted">Pakai endpoint OpenAI-compatible: OmniRoute, OpenAI, Groq, OpenRouter, atau Ollama.</p>
+      <label>Folder proyek
+        <input id="cfgWorkspace" placeholder="folder proyek" />
+      </label>
+      <button class="btn ghost block" type="button" id="useAppFolder" style="margin: 0 0 10px;">Pakai folder aplikasi ini</button>
+      <label>API base URL
+        <input id="cfgBase" placeholder="https://api.openai.com/v1" />
+      </label>
+      <div class="presets">
+        <button type="button" data-base="http://127.0.0.1:20128/v1" data-model="auto">OmniRoute</button>
+        <button type="button" data-base="https://api.openai.com/v1" data-model="gpt-4o-mini">OpenAI</button>
+        <button type="button" data-base="https://api.groq.com/openai/v1" data-model="llama-3.3-70b-versatile">Groq</button>
+        <button type="button" data-base="https://openrouter.ai/api/v1" data-model="anthropic/claude-sonnet-4">OpenRouter</button>
+        <button type="button" data-base="http://127.0.0.1:11434/v1" data-model="llama3.1">Ollama</button>
+      </div>
+      <label>Model
+        <input id="cfgModel" list="modelDatalist" placeholder="ketik atau pilih dari daftar" autocomplete="off" />
+        <datalist id="modelDatalist"></datalist>
+      </label>
+      <button class="btn ghost block" type="button" id="loadModels" style="margin: 0 0 10px;">Muat daftar model dari API</button>
+      <p class="muted sm" id="cfgModelHint">Chip model di atas chat = sesi ini saja. Model di Pengaturan = default sesi baru. Ganti model di sesi lain tidak mengubah sesi yang sedang jalan.</p>
+      <label>API key
+        <input id="cfgKey" type="password" placeholder="sk-… (kosong = mode demo)" />
+      </label>
+      <div class="sheet-actions">
+        <button class="btn ghost" type="button" id="closeSettings">Batal</button>
+        <button class="btn primary" type="button" id="saveSettings">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-overlay" id="previewOverlay" hidden>
+    <div class="preview-bar">
+      <strong id="overlayName">Preview</strong>
+      <button class="btn ghost xs" type="button" id="closeOverlay">Tutup</button>
+    </div>
+    <iframe id="overlayFrame" title="overlay"></iframe>
+  </div>
+
+  <script src="/static/app.js?v=preview24"></script>
+</body>
+</html>
