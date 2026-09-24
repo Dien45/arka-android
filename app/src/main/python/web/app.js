@@ -1049,12 +1049,88 @@ $("stopBtn").addEventListener("click", async () => {
   }
   await api(`/api/sessions/${sid}/stop`, { method: "POST" });
 });
-$("openSettings").addEventListener("click", () => { $("settingsModal").hidden = false; });
+function openSettingsModal() {
+  if ($("settingsModal")) $("settingsModal").hidden = false;
+  closeMoreMenu();
+  closeSide();
+}
+function closeSide() {
+  $("sidebar") && $("sidebar").classList.remove("open");
+  $("sideScrim") && $("sideScrim").classList.remove("open");
+}
+function closeMoreMenu() {
+  const m = $("moreMenu");
+  if (m) m.remove();
+}
+if ($("openSettings")) $("openSettings").addEventListener("click", openSettingsModal);
+if ($("openSettingsTop")) $("openSettingsTop").addEventListener("click", openSettingsModal);
+if ($("menuBtn")) {
+  $("menuBtn").addEventListener("click", () => {
+    const s = $("sidebar");
+    const scrim = $("sideScrim");
+    if (!s) return;
+    const on = !s.classList.contains("open");
+    s.classList.toggle("open", on);
+    if (scrim) scrim.classList.toggle("open", on);
+  });
+}
+if ($("sideScrim")) $("sideScrim").addEventListener("click", closeSide);
+if ($("sessionList")) {
+  $("sessionList").addEventListener("click", () => {
+    if (window.matchMedia("(max-width: 900px)").matches) closeSide();
+  });
+}
+if ($("moreBtn")) {
+  $("moreBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if ($("moreMenu")) { closeMoreMenu(); return; }
+    const menu = document.createElement("div");
+    menu.id = "moreMenu";
+    menu.className = "more-menu";
+    menu.innerHTML = `
+      <button type="button" data-act="settings">Pengaturan</button>
+      <button type="button" data-act="model">Pilih model</button>
+      <button type="button" data-act="copy">Salin chat</button>
+      <button type="button" data-act="undo">Undo file</button>
+    `;
+    document.body.appendChild(menu);
+    const r = $("moreBtn").getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + "px";
+    menu.style.right = Math.max(8, window.innerWidth - r.right) + "px";
+    menu.addEventListener("click", (ev) => {
+      const act = ev.target.closest("button") && ev.target.closest("button").dataset.act;
+      closeMoreMenu();
+      if (act === "settings") openSettingsModal();
+      if (act === "copy" && $("copyChatBtn")) $("copyChatBtn").click();
+      if (act === "undo" && $("undoBtn")) $("undoBtn").click();
+      if (act === "model" && $("modelChip")) $("modelChip").click();
+    });
+  });
+  document.addEventListener("click", (e) => {
+    if ($("moreMenu") && !e.target.closest("#moreMenu") && !e.target.closest("#moreBtn")) closeMoreMenu();
+  });
+}
 $("useAppFolder").addEventListener("click", () => {
   const suggested = state.settings?.suggested_workspace || "/home/user/arka";
   $("cfgWorkspace").value = suggested;
 });
 $("closeSettings").addEventListener("click", () => { $("settingsModal").hidden = true; });
+if ($("pickFolderBtn")) {
+  $("pickFolderBtn").addEventListener("click", async () => {
+    try {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.pick_folder) {
+        const p = await window.pywebview.api.pick_folder();
+        if (p && $("cfgWorkspace")) $("cfgWorkspace").value = p;
+        return;
+      }
+    } catch (e) {}
+    if (window.ArkaNative && window.ArkaNative.pickFolder) {
+      window.ArkaNative.pickFolder();
+      return;
+    }
+    alert("Pemilih folder hanya di aplikasi Arka (Windows/Android), bukan browser biasa.");
+  });
+}
 $("saveSettings").addEventListener("click", async () => {
   try {
     await api("/api/settings", {
