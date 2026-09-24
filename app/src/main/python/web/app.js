@@ -1193,13 +1193,28 @@ function setModelStatus(msg) {
   if ($("cfgModelHint") && msg) $("cfgModelHint").textContent = msg;
 }
 
+const SEED_MODELS = ["auto", "auto/coding", "auto/fast", "auto/cheap", "auto/quality"];
+
+function ensureSeedModels() {
+  const have = new Set(state.models || []);
+  const extra = SEED_MODELS.filter((id) => !have.has(id));
+  if (extra.length) state.models = extra.concat(state.models || []);
+}
+
 function fillModelDatalist() {
-  const dl = $("modelDatalist");
-  if (dl) dl.innerHTML = state.models.map((id) => `<option value="${esc(id)}"></option>`).join("");
+  ensureSeedModels();
+  const sel = $("cfgModelSelect");
+  if (sel) {
+    const cur = ($("cfgModel") && $("cfgModel").value) || "";
+    sel.innerHTML = (state.models || []).slice(0, 500).map((id) => {
+      const on = id === cur ? " selected" : "";
+      return `<option value="${esc(id)}"${on}>${esc(id)}</option>`;
+    }).join("");
+  }
   const box = $("cfgModelBox");
   if (!box) return;
   box.innerHTML = "";
-  for (const id of (state.models || []).slice(0, 400)) {
+  for (const id of (state.models || []).slice(0, 80)) {
     const meta = (state.modelItems || []).find((m) => m.id === id) || {};
     const b = document.createElement("button");
     b.type = "button";
@@ -1338,19 +1353,22 @@ async function pickModel(id) {
 if ($("modelChip") && $("modelMenu")) {
   $("modelChip").addEventListener("click", (e) => {
     e.stopPropagation();
-    const menu = $("modelMenu");
-    menu.hidden = !menu.hidden;
     if ($("modeMenu")) $("modeMenu").hidden = true;
-    if (!menu.hidden) {
-      if ($("modelSearch")) $("modelSearch").focus();
-      if (!state.models.length) loadModels();
-      else renderModelList();
-    }
+    if (!$("modelMenu").hidden) $("modelMenu").hidden = true;
+    else openModelPicker();
   });
   document.addEventListener("click", (e) => {
-    if (!$("modelMenu").hidden && !e.target.closest(".model-wrap")) {
-      $("modelMenu").hidden = true;
-    }
+    const menu = $("modelMenu");
+    if (!menu || menu.hidden) return;
+    if (e.target.closest(".model-wrap") || e.target.closest("#modelMenu") || e.target.closest("#moreBtn")) return;
+    menu.hidden = true;
+  });
+}
+if ($("cfgModelSelect")) {
+  $("cfgModelSelect").addEventListener("change", () => {
+    const id = $("cfgModelSelect").value;
+    if ($("cfgModel")) $("cfgModel").value = id;
+    pickModel(id);
   });
 }
 if ($("modelSearch")) {
@@ -1601,4 +1619,6 @@ function showChanged(files) {
     showEmpty();
   }
   loadModels().catch(() => {});
+})();
+() => {});
 })();
