@@ -96,7 +96,12 @@ class MainActivity : AppCompatActivity() {
         gear.setTextColor(Color.WHITE)
         gear.setBackgroundColor(Color.parseColor("#ff6b35"))
         gear.visibility = View.GONE
-        gear.setOnClickListener { showSettings() }
+        gear.setOnClickListener {
+            web.evaluateJavascript(
+                "(function(){var m=document.getElementById('settingsModal'); if(m) m.hidden=false;})();",
+                null
+            )
+        }
 
         val webLp = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
@@ -130,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                 ui.post {
                     boot.visibility = View.GONE
                     web.visibility = View.VISIBLE
-                    gear.visibility = View.VISIBLE
+                    gear.visibility = View.GONE
                     web.loadUrl("http://127.0.0.1:8765")
                 }
                 return
@@ -291,7 +296,7 @@ class MainActivity : AppCompatActivity() {
         private const val FIT_JS = """
             (function(){
               var s=document.createElement('style');
-              s.textContent='#app{grid-template-columns:1fr!important;height:100%!important;} html,body{height:100%;margin:0;overflow:hidden;} .gutter,.files{display:none!important;} .sidebar{display:none!important;} .main{min-height:100%;} .topbar{padding-right:118px;}';
+              s.textContent='#app{grid-template-columns:1fr!important;height:100%!important;} html,body{height:100%;margin:0;overflow:hidden;} .gutter,.files{display:none!important;} .main{min-height:100%;}';
               document.documentElement.appendChild(s);
             })();
         """
