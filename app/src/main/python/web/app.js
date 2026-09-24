@@ -1103,7 +1103,7 @@ if ($("moreBtn")) {
       if (act === "settings") openSettingsModal();
       if (act === "copy" && $("copyChatBtn")) $("copyChatBtn").click();
       if (act === "undo" && $("undoBtn")) $("undoBtn").click();
-      if (act === "model" && $("modelChip")) $("modelChip").click();
+      if (act === "model") openModelPicker();
     });
   });
   document.addEventListener("click", (e) => {
@@ -1195,8 +1195,21 @@ function setModelStatus(msg) {
 
 function fillModelDatalist() {
   const dl = $("modelDatalist");
-  if (!dl) return;
-  dl.innerHTML = state.models.map((id) => `<option value="${esc(id)}"></option>`).join("");
+  if (dl) dl.innerHTML = state.models.map((id) => `<option value="${esc(id)}"></option>`).join("");
+  const box = $("cfgModelBox");
+  if (!box) return;
+  box.innerHTML = "";
+  for (const id of (state.models || []).slice(0, 400)) {
+    const meta = (state.modelItems || []).find((m) => m.id === id) || {};
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = (meta.type === "combo" ? "combo · " : "") + id;
+    b.addEventListener("click", () => {
+      if ($("cfgModel")) $("cfgModel").value = id;
+      pickModel(id);
+    });
+    box.appendChild(b);
+  }
 }
 
 function sanitizeModel(s) {
@@ -1277,10 +1290,28 @@ async function loadModels() {
     fillModelDatalist();
     renderModelList();
     if (data.error && !state.models.length) setModelStatus(data.error);
-    else setModelStatus(state.models.length ? `${state.models.length} model` : "Daftar kosong");
+    else setModelStatus(state.models.length ? `${state.models.length} model dari ${data.base || "API"}` : (data.error || "Daftar kosong"));
   } catch (e) {
     setModelStatus(e.message || "Gagal memuat model");
   }
+}
+
+function openModelPicker() {
+  closeMoreMenu();
+  const menu = $("modelMenu");
+  const wrap = document.querySelector(".model-wrap");
+  if (!menu) return;
+  if (window.matchMedia("(max-width: 900px)").matches) {
+    document.body.appendChild(menu);
+    menu.classList.add("mobile-sheet");
+  } else if (wrap) {
+    wrap.appendChild(menu);
+    menu.classList.remove("mobile-sheet");
+  }
+  menu.hidden = false;
+  if ($("modelSearch")) $("modelSearch").focus();
+  if (!state.models.length) loadModels();
+  else renderModelList();
 }
 
 async function pickModel(id) {
