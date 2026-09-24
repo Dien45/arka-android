@@ -104,6 +104,11 @@ def put_settings(body: SettingsIn) -> dict[str, Any]:
     patch = {k: v for k, v in _body_dict(body).items() if v is not None}
     if "model" in patch:
         patch["model"] = sanitize_model(str(patch["model"] or ""))
+    if "api_base" in patch:
+        b = str(patch.get("api_base") or "").strip()
+        if b and "://" not in b:
+            b = "http://" + b
+        patch["api_base"] = b.rstrip("/")
     if "workspace" in patch:
         raw = str(patch.get("workspace") or "").strip()
         if not raw:
