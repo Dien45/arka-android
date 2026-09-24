@@ -7,10 +7,17 @@ from .paths import APP_DIR, SETTINGS_FILE, ensure_dirs
 
 DEFAULTS: dict[str, Any] = {
     "api_base": "https://api.openai.com/v1",
-    "api_key": "",
+    "api_key": "Tutup",
     "model": "gpt-4o-mini",
     "workspace": "",
     "max_iterations": 40,
+    "model_list": [
+        {"id": "gpt-4o-mini", "name": "GPT-4o Mini"},
+        {"id": "gpt-4o", "name": "GPT-4o"},
+        {"id": "gpt-4-turbo", "name": "GPT-4 Turbo"},
+        {"id": "gpt-3.5-turbo", "name": "GPT-3.5 Turbo"},
+        {"id": "gpt-3.5", "name": "GPT-3.5"},
+    ]
 }
 
 
