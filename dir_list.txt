@@ -1,0 +1,749 @@
+ Volume in drive C has no label.
+ Volume Serial Number is F657-02FF
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android
+
+25/09/2026  05:37    <DIR>          .
+25/09/2026  05:37    <DIR>          ..
+25/09/2026  05:31    <DIR>          .github
+25/09/2026  05:23                86 .gitignore
+25/09/2026  05:31    <DIR>          app
+25/09/2026  05:23               199 build.gradle.kts
+25/09/2026  05:37                 0 dir_list.txt
+25/09/2026  05:23               136 gradle.properties
+25/09/2026  05:23             1.634 LANGKAH.md
+25/09/2026  05:31    <DIR>          overlay
+25/09/2026  05:31    <DIR>          payload
+25/09/2026  05:23               168 README.md
+25/09/2026  05:23               322 settings.gradle.kts
+25/09/2026  05:23               441 setup-termux.sh
+               8 File(s)          2.986 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git
+
+25/09/2026  05:33                53 COMMIT_EDITMSG
+25/09/2026  05:33               329 config
+25/09/2026  05:32                73 description
+25/09/2026  05:33                21 HEAD
+25/09/2026  05:32    <DIR>          hooks
+25/09/2026  05:33             4.780 index
+25/09/2026  05:32    <DIR>          info
+25/09/2026  05:33    <DIR>          logs
+25/09/2026  05:33    <DIR>          objects
+25/09/2026  05:32    <DIR>          refs
+               5 File(s)          5.256 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\hooks
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               478 applypatch-msg.sample
+25/09/2026  05:32             1.972 commit-msg.sample
+25/09/2026  05:32             4.611 fsmonitor-watchman.sample
+25/09/2026  05:32               189 post-update.sample
+25/09/2026  05:32               424 pre-applypatch.sample
+25/09/2026  05:32             1.649 pre-commit.sample
+25/09/2026  05:32               416 pre-merge-commit.sample
+25/09/2026  05:32             1.374 pre-push.sample
+25/09/2026  05:32             4.898 pre-rebase.sample
+25/09/2026  05:32               544 pre-receive.sample
+25/09/2026  05:32             1.492 prepare-commit-msg.sample
+25/09/2026  05:32             2.783 push-to-checkout.sample
+25/09/2026  05:32             2.308 sendemail-validate.sample
+25/09/2026  05:32             3.650 update.sample
+              14 File(s)         26.788 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\info
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               240 exclude
+               1 File(s)            240 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\logs
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               597 HEAD
+25/09/2026  05:33    <DIR>          refs
+               1 File(s)            597 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\logs\refs
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33    <DIR>          heads
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\logs\refs\heads
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               404 main
+               1 File(s)            404 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33    <DIR>          04
+25/09/2026  05:33    <DIR>          08
+25/09/2026  05:32    <DIR>          0c
+25/09/2026  05:33    <DIR>          11
+25/09/2026  05:32    <DIR>          12
+25/09/2026  05:32    <DIR>          13
+25/09/2026  05:33    <DIR>          15
+25/09/2026  05:33    <DIR>          19
+25/09/2026  05:32    <DIR>          1d
+25/09/2026  05:32    <DIR>          24
+25/09/2026  05:32    <DIR>          26
+25/09/2026  05:32    <DIR>          2c
+25/09/2026  05:32    <DIR>          2e
+25/09/2026  05:32    <DIR>          2f
+25/09/2026  05:33    <DIR>          32
+25/09/2026  05:32    <DIR>          35
+25/09/2026  05:32    <DIR>          39
+25/09/2026  05:32    <DIR>          3a
+25/09/2026  05:32    <DIR>          3e
+25/09/2026  05:33    <DIR>          43
+25/09/2026  05:32    <DIR>          44
+25/09/2026  05:33    <DIR>          46
+25/09/2026  05:32    <DIR>          49
+25/09/2026  05:32    <DIR>          4e
+25/09/2026  05:32    <DIR>          53
+25/09/2026  05:33    <DIR>          55
+25/09/2026  05:32    <DIR>          59
+25/09/2026  05:32    <DIR>          5d
+25/09/2026  05:32    <DIR>          5e
+25/09/2026  05:32    <DIR>          60
+25/09/2026  05:33    <DIR>          62
+25/09/2026  05:33    <DIR>          65
+25/09/2026  05:32    <DIR>          83
+25/09/2026  05:33    <DIR>          86
+25/09/2026  05:32    <DIR>          8f
+25/09/2026  05:32    <DIR>          91
+25/09/2026  05:32    <DIR>          93
+25/09/2026  05:32    <DIR>          9c
+25/09/2026  05:33    <DIR>          a4
+25/09/2026  05:33    <DIR>          a5
+25/09/2026  05:33    <DIR>          a7
+25/09/2026  05:32    <DIR>          ab
+25/09/2026  05:33    <DIR>          ad
+25/09/2026  05:32    <DIR>          b0
+25/09/2026  05:33    <DIR>          b2
+25/09/2026  05:33    <DIR>          b3
+25/09/2026  05:33    <DIR>          be
+25/09/2026  05:33    <DIR>          d1
+25/09/2026  05:32    <DIR>          d2
+25/09/2026  05:32    <DIR>          d7
+25/09/2026  05:33    <DIR>          d9
+25/09/2026  05:32    <DIR>          dc
+25/09/2026  05:33    <DIR>          e1
+25/09/2026  05:32    <DIR>          fc
+25/09/2026  05:32    <DIR>          info
+25/09/2026  05:32    <DIR>          pack
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\04
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               119 919f321d8eb900ef4883017b99e7c14e9ab759
+               1 File(s)            119 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\08
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               119 4a57dc649db3d9ddab3168dd653dc33a5ed42f
+               1 File(s)            119 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\0c
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               955 e130847ecea2edc0e8cd54a6b7a0fc67f91af4
+               1 File(s)            955 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\11
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                59 d9fef6f7fd68e43cd7dca2e2ddf22f6a351e31
+               1 File(s)             59 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\12
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               192 6edf6bd9383d6e9471bc7c3d78dbba3e218a7a
+               1 File(s)            192 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\13
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             4.406 2645f18455fb6b1cc10120c57677063150ac95
+25/09/2026  05:32               192 6bef566b5ae0284115aea4c83f3c07ef75e3de
+               2 File(s)          4.598 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\15
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               387 5d0eb6ee7656991c9bf7af7c01ebc069baf662
+               1 File(s)            387 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\19
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:32                43 006712427601cd60f071f0410b358c14b64440
+25/09/2026  05:33               114 382c14d281bfe7b340a3781e4dd76b7515c0f6
+               2 File(s)            157 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\1d
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               477 cfe3a79d461479322c7bebdf0af773c79698a1
+               1 File(s)            477 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\24
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               126 39f15c2cb7d1046af45236a2fe03358d2153ca
+               1 File(s)            126 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\26
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32                91 4e1bb9eb6676a45b0c314c7be7ad9eb935dbb4
+               1 File(s)             91 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\2c
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               143 288c8f80e0096a974afc486e0ab0b14a176345
+               1 File(s)            143 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\2e
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32                92 427b4f9b916f8840d0c4a3e74c4f7a40294437
+               1 File(s)             92 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\2f
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             7.609 b42fb8243bb2386ded5ead86575c4bcecb6e60
+               1 File(s)          7.609 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\32
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                52 5bee2cbd1e318bdd0c9be352da6387d2825c13
+25/09/2026  05:33               158 bc6f2e4776aaf66d18df174889b2ce180e4249
+               2 File(s)            210 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\35
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               867 ee80d63374e5f0d1cb30ae7ddb89d18b4bdc88
+               1 File(s)            867 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\39
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               351 7658774826501d375e854a6112a580dda020aa
+               1 File(s)            351 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\3a
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               590 912cc7dcd20b1334956e1922dfa10d8c4aaf98
+               1 File(s)            590 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\3e
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               946 b34dc60eb14c23ef113b676a923772d20eac2f
+               1 File(s)            946 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\43
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               107 7c76cfb54c79e6a4349f12bfad4d74849a4b9a
+               1 File(s)            107 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\44
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             1.237 08c622fa38fcf177698d70a3a8fb9774beed58
+25/09/2026  05:32               137 a0532b56f76bc81ef7ea2a97de13dd1c7ac3ce
+25/09/2026  05:32            11.036 cdde376745899682839d987ca1c42777779dd3
+               3 File(s)         12.410 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\46
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               152 a46f327b8e6a49f1096cbb584696b41ad370eb
+               1 File(s)            152 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\49
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               619 4d444fdf6b396ddc7b1794b80c2c7ac2f7c05c
+               1 File(s)            619 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\4e
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               104 f189d74085039d9dd50353b8e7ef768cc2635d
+               1 File(s)            104 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\53
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               611 08066ab28c590d61f5c13f8c0ab1943654dd78
+25/09/2026  05:32               267 6624944589f5f26ea936de75065267817a96a1
+               2 File(s)            878 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\55
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               139 3d2b58c608d4c869d6cd4eb3ada12795b6a40b
+               1 File(s)            139 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\59
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               456 a50aae5f94a6fe5b11c115781e6dd3a1d4fe82
+               1 File(s)            456 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\5d
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             3.842 df07b9de1078bb256c13d390946724c1f10eb8
+               1 File(s)          3.842 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\5e
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32            17.260 f0358e116e527e338dfe00ee1cdc4b8f8d00a6
+               1 File(s)         17.260 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\60
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               286 a4d3c7c417355cd515ddb46561776704860e7a
+               1 File(s)            286 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\62
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               120 9334f35cbfbe34e2c2716f96c8aa5144542808
+               1 File(s)            120 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\65
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                72 5600753a02c9427747412c40326c9d8162f1e2
+               1 File(s)             72 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\83
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               155 e72fb7872121b8917e20a33010637436a53f8b
+               1 File(s)            155 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\86
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               243 4ea4dbfe6b00e1b1217ae039a31bab0da12aa1
+               1 File(s)            243 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\8f
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               131 2e28c0655d17adb1aad1549f28c6dee75a8090
+               1 File(s)            131 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\91
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             3.673 fef3e22a4c9592886af11dfdc8ccbc3b800283
+               1 File(s)          3.673 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\93
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             7.619 e99e0833c5e1ac64db27c9408e65fe24fd76e4
+               1 File(s)          7.619 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\9c
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               311 dc01bb351af9db7825ff783ebd8b7927810036
+               1 File(s)            311 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\a4
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                86 88357f9744838bd3de202454333060a3ab9698
+               1 File(s)             86 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\a5
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33               244 cedbfe6c646eeb54cba0b5aaccd081b9af7cb3
+               1 File(s)            244 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\a7
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:32             5.332 4137de1b02a4d1be1937da7111b5b2af8f7e50
+25/09/2026  05:33                56 fbc6796d6815e6925cb5f69513f4cb68d3f293
+               2 File(s)          5.388 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\ab
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             2.700 7ed1f6b2397d27b240033386a97e514bdcd95b
+               1 File(s)          2.700 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\ad
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                46 18b5c2315bb01755698384d7bd8370323e7461
+               1 File(s)             46 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\b0
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32            11.404 70ee06c9ed3b10617cda37ea9f723b7fc56e51
+               1 File(s)         11.404 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\b2
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                46 a26441e2fa3ce4389c341c7299d3a516d34166
+               1 File(s)             46 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\b3
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                45 462c0924d608ccc061ed00d122eb5125abca0d
+25/09/2026  05:32             4.634 a69fc4152006795214926267b1ec6967786fc7
+               2 File(s)          4.679 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\be
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                98 3a42a9e60096b1d69b552d66c61f2fd796833a
+               1 File(s)             98 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\d1
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                44 3596f2061f46c7275c6e0cac80b78d13dbd020
+               1 File(s)             44 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\d2
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32               741 896f1c099e57b02533dc7bf729c2715ae2195b
+               1 File(s)            741 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\d7
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             3.805 0fb2492b428d5bbc37e288236bfe30dd760e03
+               1 File(s)          3.805 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\d9
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:32               462 141171fbaec6c5e26a2b0a4ebc08966a774080
+25/09/2026  05:33               166 65fe072fee8150bbd51ab4ec666df7a91a033a
+               2 File(s)            628 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\dc
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32             3.206 39733dfc05803caeaed8095f4cd241e608e333
+               1 File(s)          3.206 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\e1
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                46 d6205f6c907db39c2ba5af6d7f01465dae0f6a
+               1 File(s)             46 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\fc
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:32            15.895 0e7e67207c12c688975e2be8ba278caeda667f
+25/09/2026  05:32               190 fead031677ae1afb474b54f5f928a2a8b746b3
+               2 File(s)         16.085 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\info
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\objects\pack
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\refs
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+25/09/2026  05:33    <DIR>          heads
+25/09/2026  05:32    <DIR>          tags
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\refs\heads
+
+25/09/2026  05:33    <DIR>          .
+25/09/2026  05:33    <DIR>          ..
+25/09/2026  05:33                41 main
+               1 File(s)             41 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.git\refs\tags
+
+25/09/2026  05:32    <DIR>          .
+25/09/2026  05:32    <DIR>          ..
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.github
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          workflows
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\.github\workflows
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23             1.693 build-arka.yml
+               1 File(s)          1.693 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23               969 build.gradle.kts
+25/09/2026  05:23               174 requirements-android.txt
+25/09/2026  05:31    <DIR>          src
+               2 File(s)          1.143 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          main
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23             1.531 AndroidManifest.xml
+25/09/2026  05:31    <DIR>          java
+25/09/2026  05:31    <DIR>          python
+25/09/2026  05:31    <DIR>          res
+               1 File(s)          1.531 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\java
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          id
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\java\id
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          arka
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\java\id\arka
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          app
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\java\id\arka\app
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23               322 ArkaApp.kt
+25/09/2026  05:23             2.048 ArkaService.kt
+25/09/2026  05:23               835 LinuxBox.kt
+25/09/2026  05:23            11.463 MainActivity.kt
+               4 File(s)         14.668 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\python
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          app
+25/09/2026  05:23               957 arka_boot.py
+25/09/2026  05:31    <DIR>          web
+               1 File(s)            957 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\python\app
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23            35.501 agent.py
+25/09/2026  05:23            14.040 main.py
+25/09/2026  05:23               646 paths.py
+25/09/2026  05:23             2.600 sessions.py
+25/09/2026  05:23             1.390 settings_store.py
+25/09/2026  05:23            25.402 tools.py
+25/09/2026  05:23                27 __init__.py
+               7 File(s)         79.606 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\python\web
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23            52.997 app.js
+25/09/2026  05:23             9.968 index.html
+25/09/2026  05:23            18.374 styles.css
+               3 File(s)         81.339 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\res
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          drawable
+25/09/2026  05:31    <DIR>          values
+25/09/2026  05:31    <DIR>          xml
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\res\drawable
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23               470 ic_arka.xml
+               1 File(s)            470 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\res\values
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23               106 strings.xml
+25/09/2026  05:23               327 themes.xml
+               2 File(s)            433 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\app\src\main\res\xml
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23               145 network_security_config.xml
+               1 File(s)            145 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\overlay
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23            11.622 ArkaChatActivity.java
+25/09/2026  05:23             3.235 patch.py
+               2 File(s)         14.857 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\payload
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          arka
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\payload\arka
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:31    <DIR>          app
+25/09/2026  05:23                86 requirements.txt
+25/09/2026  05:31    <DIR>          web
+               1 File(s)             86 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\payload\arka\app
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23            34.400 agent.py
+25/09/2026  05:23            11.866 main.py
+25/09/2026  05:23               570 paths.py
+25/09/2026  05:23             2.600 sessions.py
+25/09/2026  05:23             1.328 settings_store.py
+25/09/2026  05:23            25.377 tools.py
+25/09/2026  05:23                27 __init__.py
+               7 File(s)         76.168 bytes
+
+ Directory of C:\Users\Dien\Desktop\Arka\arka-android\payload\arka\web
+
+25/09/2026  05:31    <DIR>          .
+25/09/2026  05:31    <DIR>          ..
+25/09/2026  05:23            48.093 app.js
+25/09/2026  05:23             8.151 index.html
+25/09/2026  05:23            16.064 styles.css
+               3 File(s)         72.308 bytes
+
+     Total Files Listed:
+             131 File(s)        497.627 bytes
+             260 Dir(s)  30.666.186.752 bytes free
