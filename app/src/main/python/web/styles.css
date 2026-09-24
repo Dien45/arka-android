@@ -376,7 +376,7 @@ textarea:focus, .prompt:focus { border-color: #4a372f; box-shadow: 0 0 0 3px rgb
 
 .modal {
   position: fixed; inset: 0; background: rgba(0,0,0,.55);
-  display: grid; place-items: center; z-index: 20;
+  display: grid; place-items: center; z-index: 90;
 }
 .modal[hidden] { display: none; }
 .sheet {
@@ -411,8 +411,9 @@ textarea:focus, .prompt:focus { border-color: #4a372f; box-shadow: 0 0 0 3px rgb
 .err { color: var(--danger); }
 
 #menuBtn, #moreBtn { display: none; }
+.more-menu[hidden] { display: none !important; }
 .more-menu {
-  position: fixed; z-index: 50; min-width: 180px;
+  position: fixed; z-index: 95; min-width: 180px;
   background: var(--panel); border: 1px solid var(--line);
   border-radius: 10px; box-shadow: var(--shadow); padding: 6px;
 }
@@ -438,7 +439,8 @@ textarea:focus, .prompt:focus { border-color: #4a372f; box-shadow: 0 0 0 3px rgb
     transition: transform .2s ease;
   }
   .sidebar.open { transform: translateX(0); }
-  .side-scrim.open { display: block; }
+  .side-scrim.open { display: block; z-index: 70; }
+  .sidebar { z-index: 80 !important; }
   .workspace { grid-template-columns: 1fr; }
   .topbar { padding: 0 10px; height: 52px; gap: 8px; }
   .crumbs { min-width: 0; flex: 1; }
