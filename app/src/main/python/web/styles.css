@@ -443,6 +443,14 @@ textarea:focus, .prompt:focus { border-color: #4a372f; box-shadow: 0 0 0 3px rgb
   .topbar { padding: 0 10px; height: 52px; gap: 8px; }
   .crumbs { min-width: 0; flex: 1; }
   #menuBtn, #moreBtn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+  .top-actions #modelChip,
+  #openSettingsTop, #copyChatBtn, #undoBtn, #renameBtn { display: none !important; }
+  .top-actions .model-wrap { display: block; position: static; }
+  #stopBtn:not([hidden]) { display: inline-flex; }
+  .session-title { font-size: 14px; }
+  .composer-bar { flex-wrap: wrap; }
+}
+content: center; width: 36px; height: 36px; }
   .top-actions .model-wrap,
   #openSettingsTop, #copyChatBtn, #undoBtn, #renameBtn { display: none !important; }
   #stopBtn:not([hidden]) { display: inline-flex; }
