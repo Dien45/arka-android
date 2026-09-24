@@ -449,11 +449,19 @@ textarea:focus, .prompt:focus { border-color: #4a372f; box-shadow: 0 0 0 3px rgb
   #stopBtn:not([hidden]) { display: inline-flex; }
   .session-title { font-size: 14px; }
   .composer-bar { flex-wrap: wrap; }
+  .model-menu.mobile-sheet {
+    position: fixed; left: 10px; right: 10px; top: 52px; width: auto;
+    z-index: 80; max-height: calc(100vh - 72px); overflow: auto;
+  }
 }
-content: center; width: 36px; height: 36px; }
-  .top-actions .model-wrap,
-  #openSettingsTop, #copyChatBtn, #undoBtn, #renameBtn { display: none !important; }
-  #stopBtn:not([hidden]) { display: inline-flex; }
-  .session-title { font-size: 14px; }
-  .composer-bar { flex-wrap: wrap; }
+.model-select {
+  width: 100%; min-height: 132px;
+  background: #121318; color: var(--text);
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 6px; margin: 6px 0; font-size: 14px;
 }
+.settings-models {
+  max-height: 180px; border: 1px solid var(--line); border-radius: 10px;
+  background: #121318; margin: 0 0 10px; padding: 4px;
+}
+.settings-models:empty { display: none; }
