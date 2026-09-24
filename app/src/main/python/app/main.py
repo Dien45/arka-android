@@ -229,9 +229,18 @@ def _normalize_base(url: str) -> str:
     return norm(url)
 
 
+SEED_MODELS = [
+    {"id": "auto", "name": "OmniRoute auto", "type": ""},
+    {"id": "auto/coding", "name": "OmniRoute coding", "type": ""},
+    {"id": "auto/fast", "name": "OmniRoute fast", "type": ""},
+    {"id": "auto/cheap", "name": "OmniRoute cheap", "type": ""},
+    {"id": "auto/quality", "name": "OmniRoute quality", "type": ""},
+]
+
+
 @app.post("/api/models")
 async def list_models(body: ModelsIn | None = None) -> dict[str, Any]:
-    from .agent import fetch_models_with_status, sanitize_model
+    from .agent import sanitize_model
 
     settings = load_settings()
     if body:
@@ -239,12 +248,35 @@ async def list_models(body: ModelsIn | None = None) -> dict[str, Any]:
             settings = {**settings, "api_base": body.api_base}
         if body.api_key not in (None, ""):
             settings = {**settings, "api_key": body.api_key}
-    catalog, err = await fetch_models_with_status(settings)
-    ids = [m["id"] for m in catalog]
+    catalog: list[dict[str, Any]] = []
+    err = ""
+    try:
+        from .agent import fetch_models_with_status
+
+        catalog, err = await fetch_models_with_status(settings)
+    except Exception as e:
+        err = str(e)
+        try:
+            from .agent import fetch_model_catalog
+
+            catalog = await fetch_model_catalog(settings)
+            if catalog:
+                err = ""
+        except Exception as e2:
+            err = str(e2)
+    seen: set[str] = set()
+    merged: list[dict[str, Any]] = []
+    for m in list(SEED_MODELS) + list(catalog or []):
+        mid = str(m.get("id") or "")
+        if not mid or mid in seen:
+            continue
+        seen.add(mid)
+        merged.append(m)
+    ids = [m["id"] for m in merged]
     current = sanitize_model(settings.get("model") or "")
     return {
         "models": ids,
-        "items": catalog,
+        "items": merged,
         "base": _normalize_base(settings.get("api_base") or ""),
         "count": len(ids),
         "current": current,
