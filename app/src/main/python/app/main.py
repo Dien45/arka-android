@@ -224,24 +224,22 @@ class ModelsIn(BaseModel):
 
 
 def _normalize_base(url: str) -> str:
-    u = (url or "").strip().rstrip("/")
-    for suffix in ("/chat/completions", "/completions"):
-        if u.endswith(suffix):
-            u = u[: -len(suffix)]
-    return u
+    from .agent import _normalize_base as norm
+
+    return norm(url)
 
 
 @app.post("/api/models")
 async def list_models(body: ModelsIn | None = None) -> dict[str, Any]:
-    from .agent import fetch_model_catalog, sanitize_model
+    from .agent import fetch_models_with_status, sanitize_model
 
     settings = load_settings()
     if body:
         if body.api_base:
             settings = {**settings, "api_base": body.api_base}
-        if body.api_key is not None:
+        if body.api_key not in (None, ""):
             settings = {**settings, "api_key": body.api_key}
-    catalog = await fetch_model_catalog(settings)
+    catalog, err = await fetch_models_with_status(settings)
     ids = [m["id"] for m in catalog]
     current = sanitize_model(settings.get("model") or "")
     return {
@@ -250,6 +248,7 @@ async def list_models(body: ModelsIn | None = None) -> dict[str, Any]:
         "base": _normalize_base(settings.get("api_base") or ""),
         "count": len(ids),
         "current": current,
+        "error": err,
     }
 
 
