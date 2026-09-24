@@ -1060,7 +1060,7 @@ function closeSide() {
 }
 function closeMoreMenu() {
   const m = $("moreMenu");
-  if (m) m.remove();
+  if (m) m.hidden = true;
 }
 if ($("openSettings")) $("openSettings").addEventListener("click", openSettingsModal);
 if ($("openSettingsTop")) $("openSettingsTop").addEventListener("click", openSettingsModal);
@@ -1619,6 +1619,4 @@ function showChanged(files) {
     showEmpty();
   }
   loadModels().catch(() => {});
-})();
-() => {});
 })();
