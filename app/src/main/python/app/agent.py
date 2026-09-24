@@ -119,10 +119,14 @@ def _api_headers(settings: dict[str, Any]) -> dict[str, str]:
 
 
 def _normalize_base(url: str) -> str:
-    u = (url or "").strip().rstrip("/")
+    u = (url or "").strip().strip("<>").rstrip("/")
+    if u.startswith("[") and "](" in u:
+        u = u.split("](", 1)[-1].rstrip(")").strip()
     for suffix in ("/chat/completions", "/completions"):
         if u.endswith(suffix):
             u = u[: -len(suffix)]
+    if u and "://" not in u:
+        u = "http://" + u
     return u
 
 
