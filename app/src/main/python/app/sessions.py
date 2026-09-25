@@ -79,7 +79,8 @@ def delete_session(sid: str) -> bool:
     return False
 
 
-def rename_session(sid: str, title: str) -> dict[str, Any] | None:
+def rename_session(sid: str, title: str | None) -> dict[str, Any] | None:
+    # legacy wrapper, but now also supports model via update_session
     return update_session(sid, title=title)
 
 
@@ -90,8 +91,11 @@ def update_session(sid: str, title: str | None = None, model: str | None = None)
     if title is not None:
         session["title"] = (title or "").strip()[:80] or "Sesi"
     if model is not None:
-        from .agent import sanitize_model
+        try:
+            from .agent import sanitize_model
 
-        session["model"] = sanitize_model(model)
+            session["model"] = sanitize_model(model)
+        except Exception:
+            session["model"] = (model or "").strip()[:240]
     save_session(session)
     return session

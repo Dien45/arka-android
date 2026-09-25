@@ -377,11 +377,17 @@ textarea:focus, .prompt:focus { border-color: #4a372f; box-shadow: 0 0 0 3px rgb
 .modal {
   position: fixed; inset: 0; background: rgba(0,0,0,.55);
   display: grid; place-items: center; z-index: 90;
+  overflow-y: auto; padding: 12px;
 }
 .modal[hidden] { display: none; }
 .sheet {
-  width: min(520px, calc(100% - 24px)); background: var(--panel);
+  width: min(560px, calc(100% - 24px)); background: var(--panel);
   border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow);
+}
+.sheet.scrollable {
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .sheet h2 { margin: 0 0 6px; }
 .muted { color: var(--muted); margin: 0 0 16px; }

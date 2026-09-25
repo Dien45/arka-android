@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Arka</title>
-  <link rel="stylesheet" href="/static/styles.css?v=preview28" />
+  <link rel="stylesheet" href="/static/styles.css?v=arka29" />
 </head>
 <body>
   <div id="app">
@@ -66,6 +66,7 @@
               <div class="composer-bar">
                 <button class="icon-btn" type="button" id="attachBtn" title="Lampirkan file">📎</button>
                 <button class="icon-btn" type="button" id="pasteImgBtn" title="Tempel gambar dari clipboard">📋</button>
+                <button class="icon-btn" type="button" id="imageGenBtn" title="Generate gambar 🖼">🖼</button>
                 <div class="mode-wrap">
                   <button class="mode-chip" id="modeChip" type="button" title="Mode agen">Agent ▾</button>
                   <div class="mode-menu" id="modeMenu" hidden>
@@ -121,14 +122,16 @@
   </div>
 
   <div class="modal" id="settingsModal" hidden>
-    <div class="sheet">
+    <div class="sheet scrollable">
       <h2>Pengaturan</h2>
       <p class="muted">Pakai endpoint OpenAI-compatible: OmniRoute, OpenAI, Groq, OpenRouter, atau Ollama.</p>
+
       <label>Folder proyek
         <input id="cfgWorkspace" placeholder="folder proyek" />
       </label>
       <button class="btn ghost block" type="button" id="pickFolderBtn" style="margin: 0 0 8px;">Pilih folder…</button>
       <button class="btn ghost block" type="button" id="useAppFolder" style="margin: 0 0 10px;">Pakai folder aplikasi ini</button>
+
       <label>API base URL
         <input id="cfgBase" placeholder="https://api.openai.com/v1" />
       </label>
@@ -139,8 +142,14 @@
         <button type="button" data-base="https://openrouter.ai/api/v1" data-model="anthropic/claude-sonnet-4">OpenRouter</button>
         <button type="button" data-base="http://127.0.0.1:11434/v1" data-model="llama3.1">Ollama</button>
       </div>
+
+      <!-- API key di atas list model -->
+      <label>API key
+        <input id="cfgKey" type="password" placeholder="sk-… (kosong = mode demo)" />
+      </label>
+
       <label>Model
-        <input id="cfgModel" placeholder="auto/coding atau tempel ID" autocomplete="off" />
+        <input id="cfgModel" placeholder="auto/coding atau tempel ID (sdxl/flux untuk gambar)" autocomplete="off" />
       </label>
       <select id="cfgModelSelect" size="6" class="model-select">
         <option value="auto">auto</option>
@@ -148,13 +157,33 @@
         <option value="auto/fast">auto/fast</option>
         <option value="auto/cheap">auto/cheap</option>
         <option value="auto/quality">auto/quality</option>
+        <option value="sdxl">sdxl (gambar)</option>
+        <option value="flux">flux (gambar)</option>
+        <option value="flux-lightning">flux-lightning (gambar)</option>
       </select>
       <button class="btn ghost block" type="button" id="loadModels" style="margin: 8px 0 10px;">Muat daftar model dari API</button>
       <div class="model-list settings-models" id="cfgModelBox"></div>
-      <p class="muted sm" id="cfgModelHint">Pilih dari list, atau ketik ID. Muat daftar = ambil dari OmniRoute (laptop harus nyala).</p>
-      <label>API key
-        <input id="cfgKey" type="password" placeholder="sk-… (kosong = mode demo)" />
+      <p class="muted sm" id="cfgModelHint">Pilih dari list, atau ketik ID. Muat daftar = ambil dari OmniRoute (laptop harus nyala). Model sdxl/flux/lightning akan pakai /v1/images/generations, bukan chat/completions.</p>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0" />
+
+      <h3 style="margin:0 0 8px">GitHub</h3>
+      <p class="muted sm">Untuk tombol "Kirim semua file ke GitHub". Default repo: Dien45/arka-android. Jangan taruh token di URL remote, pakai Bearer header.</p>
+      <label>GitHub Username
+        <input id="cfgGithubUser" placeholder="Dien45" />
       </label>
+      <label>GitHub Token (PAT) - jangan share di chat
+        <input id="cfgGithubToken" type="password" placeholder="ghp_… atau github_pat_…" />
+      </label>
+      <label>GitHub Repo (user/repo)
+        <input id="cfgGithubRepo" placeholder="Dien45/arka-android" />
+      </label>
+      <div style="display:flex;gap:8px;margin:8px 0 12px;flex-wrap:wrap">
+        <button class="btn ghost" type="button" id="githubStatusBtn">Cek status</button>
+        <button class="btn primary" type="button" id="githubPushBtn">Kirim semua file ke GitHub</button>
+      </div>
+      <pre id="githubStatusOut" class="preview" style="min-height:60px;max-height:160px;overflow:auto;margin:0 0 12px">Belum cek status.</pre>
+
       <div class="sheet-actions">
         <button class="btn ghost" type="button" id="closeSettings">Batal</button>
         <button class="btn primary" type="button" id="saveSettings">Simpan</button>
@@ -165,6 +194,7 @@
   <div class="more-menu" id="moreMenu" hidden>
     <button type="button" data-act="settings">Pengaturan</button>
     <button type="button" data-act="model">Pilih model</button>
+    <button type="button" data-act="image">Generate gambar 🖼</button>
     <button type="button" data-act="copy">Salin chat</button>
     <button type="button" data-act="undo">Undo file</button>
   </div>
@@ -177,6 +207,33 @@
     <iframe id="overlayFrame" title="overlay"></iframe>
   </div>
 
-  <script src="/static/app.js?v=preview28"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4051c3018229fd1',t:'MTc5MDI4NzczMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+  <!-- Image gen modal -->
+  <div class="modal" id="imageModal" hidden>
+    <div class="sheet">
+      <h2>Generate Gambar 🖼</h2>
+      <p class="muted">Pakai /v1/images/generations. Model sdxl/flux/lightning tidak ke chat/completions.</p>
+      <label>Prompt
+        <textarea id="imgPrompt" rows="3" placeholder="Seekor kucing astronaut..." style="width:100%;min-height:80px;background:#121318;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px"></textarea>
+      </label>
+      <label>Model gambar
+        <input id="imgModel" placeholder="sdxl, flux, flux-lightning, dall-e-3" value="sdxl" />
+      </label>
+      <label>Ukuran
+        <select id="imgSize" class="model-select" style="min-height:40px">
+          <option value="1024x1024">1024x1024</option>
+          <option value="1024x1792">1024x1792</option>
+          <option value="1792x1024">1792x1024</option>
+          <option value="512x512">512x512</option>
+        </select>
+      </label>
+      <div id="imgStatus" class="muted sm" style="margin:8px 0"></div>
+      <div class="sheet-actions">
+        <button class="btn ghost" type="button" id="closeImage">Batal</button>
+        <button class="btn primary" type="button" id="doImage">Generate</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=arka29"></script>
+</body>
 </html>

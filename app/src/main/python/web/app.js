@@ -82,7 +82,7 @@ function tidyAssistantText(text) {
   let t = String(text || "");
   t = t.replace(/\*\(lanjut otomatis…\)\*/g, "");
   t = t.replace(/([.!?])\s*(Baik\b)/g, "$1\n\n$2");
-  t = t.replace(/(Baik[,!]?\s+saya akan[\s\S]{8,280}?[.!?])(?=\s*Baik\b)/gi, "$1\n\n");
+  t = t.replace(/(Baik[,!]?\\s+saya akan[\\s\\S]{8,280}?[.!?])(?=\\s*Baik\\b)/gi, "$1\n\n");
   const paras = t.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
   const out = [];
   const isWork = (s) => /saya akan|mari saya|melanjutkan|menyelesaikan semua file|let me |i'll continue/i.test(s);
@@ -135,7 +135,7 @@ async function api(path, opts = {}) {
       const d = data.detail;
       msg = typeof d === "string" ? d : JSON.stringify(d || data);
     } else if (typeof data === "string" && data.trim()) {
-      msg = data.slice(0, 500);
+      msg = data.slice(0, 800);
     }
     throw new Error(msg);
   }
@@ -305,6 +305,7 @@ function openSessMenu(btn, s) {
 
 function renderSessions() {
   const box = $("sessionList");
+  if (!box) return;
   box.innerHTML = "";
   for (const s of state.sessions) {
     const b = document.createElement("div");
@@ -334,7 +335,9 @@ function renderSessions() {
 }
 
 function showEmpty() {
-  $("messages").innerHTML = "";
+  const box = $("messages");
+  if (!box) return;
+  box.innerHTML = "";
   const empty = document.createElement("div");
   empty.className = "empty";
   empty.id = "emptyState";
@@ -346,12 +349,19 @@ function showEmpty() {
       <button type="button" data-fill="Jelaskan struktur proyek ini.">Jelaskan proyek</button>
       <button type="button" data-fill="Buat file hello.py yang mencetak Halo Arka, lalu jalankan.">Tulis + jalankan</button>
       <button type="button" data-fill="Cari di web cara pakai FastAPI StreamingResponse.">Cari di internet</button>
+      <button type="button" data-fill="Generate gambar kucing astronaut dengan model sdxl">🖼 Generate gambar</button>
     </div>`;
-  $("messages").appendChild(empty);
+  box.appendChild(empty);
   empty.querySelectorAll("[data-fill]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      setPrompt(btn.dataset.fill);
-      focusPrompt();
+      const v = btn.dataset.fill || "";
+      if (v.includes("Generate gambar")) {
+        openImageModal();
+        if ($("imgPrompt")) $("imgPrompt").value = "Seekor kucing astronaut, style cinematic";
+      } else {
+        setPrompt(v);
+        focusPrompt();
+      }
     });
   });
   if (!state.session) $("sessionTitle").textContent = "Pilih sesi";
@@ -413,30 +423,13 @@ function renderMessages(session) {
 
 function renderTodos(items) {
   const el = $("todos");
-  if (!items.length) {
-    el.hidden = true;
+  if (!items || !items.length) {
+    if (el) el.hidden = true;
     return;
   }
+  if (!el) return;
   el.hidden = false;
   el.innerHTML = items.map((t) => `<span class="${t.status === "done" ? "done" : ""}">${esc(t.status)} · ${esc(t.content)}</span>`).join("");
-}
-
-function currentAssistantEls() {
-  let last = $("messages").querySelector(".msg.assistant:last-of-type");
-  if (!last) {
-    last = document.createElement("div");
-    last.className = "msg assistant";
-    last.innerHTML = `<div class="who">Arka</div><div class="bubble"><div class="md"></div></div>`;
-    $("messages").appendChild(last);
-  }
-  const bubble = last.querySelector(".bubble");
-  let mdEl = bubble.querySelector(".md");
-  if (!mdEl) {
-    mdEl = document.createElement("div");
-    mdEl.className = "md";
-    bubble.appendChild(mdEl);
-  }
-  return { last, bubble, mdEl };
 }
 
 async function refreshSessions() {
@@ -447,9 +440,7 @@ async function refreshSessions() {
 async function openSession(id) {
   state.session = await api(`/api/sessions/${id}`);
   state.mode = state.session.mode || "build";
-  document.querySelectorAll("#modeSeg button").forEach((b) => {
-    b.classList.toggle("on", b.dataset.mode === state.mode);
-  });
+  syncModeChip();
   renderMessages(state.session);
   if (isRunning(id)) paintRun(id);
   renderSessions();
@@ -527,8 +518,10 @@ function drawTree() {
 async function loadTree() {
   try {
     const data = await api("/api/tree");
-    $("wsName").textContent = data.workspace;
-    $("wsName").title = data.workspace;
+    if ($("wsName")) {
+      $("wsName").textContent = data.workspace;
+      $("wsName").title = data.workspace;
+    }
     state.treeNodes = data.nodes || [];
     const roots = new Set(state.treeNodes.filter((n) => n.dir && n.depth === 0).map((n) => n.path));
     if (state.expanded.size === 0) {
@@ -542,13 +535,16 @@ async function loadTree() {
 
 async function loadSettings() {
   state.settings = await api("/api/settings");
-  $("cfgWorkspace").value = state.settings.workspace || "";
-  $("cfgBase").value = state.settings.api_base || "";
-  $("cfgModel").value = state.settings.model || "";
-  $("cfgKey").value = state.settings.api_key || "";
+  if ($("cfgWorkspace")) $("cfgWorkspace").value = state.settings.workspace || "";
+  if ($("cfgBase")) $("cfgBase").value = state.settings.api_base || "";
+  if ($("cfgModel")) $("cfgModel").value = state.settings.model || "";
+  if ($("cfgKey")) $("cfgKey").value = state.settings.api_key || "";
+  if ($("cfgGithubUser")) $("cfgGithubUser").value = state.settings.github_username || "";
+  if ($("cfgGithubToken")) $("cfgGithubToken").value = state.settings.github_token || "";
+  if ($("cfgGithubRepo")) $("cfgGithubRepo").value = state.settings.github_repo || "Dien45/arka-android";
   syncModelChip();
-  $("demoPill").hidden = Boolean(state.settings.api_key);
-  $("wsName").textContent = state.settings.workspace || "folder proyek";
+  if ($("demoPill")) $("demoPill").hidden = Boolean(state.settings.api_key);
+  if ($("wsName")) $("wsName").textContent = state.settings.workspace || "folder proyek";
 }
 
 function applyModeButtons() {
@@ -674,7 +670,7 @@ function filesFromClipboard(e) {
       const html = cd.getData && cd.getData("text/html");
       const m = html && html.match(/src=["'](data:image\/[^"']+)["']/i);
       if (m) add(dataUrlToFile(m[1], 0));
-    } catch (err) {}
+    } catch {}
   }
   return out;
 }
@@ -756,7 +752,7 @@ async function harvestPromptImages() {
       try {
         const blob = await fetch(src).then((r) => r.blob());
         file = new File([blob], pasteImageName({ type: blob.type || "image/png" }, i), { type: blob.type || "image/png" });
-      } catch (err) {}
+      } catch {}
     }
     img.remove();
     if (file) {
@@ -949,7 +945,7 @@ async function send() {
       await loadTree();
       try {
         state.session = await api(`/api/sessions/${sid}`);
-      } catch (e) {}
+      } catch {}
     } else {
       refreshSessions().catch(() => {});
     }
@@ -966,104 +962,139 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeSessMenu();
 });
-$("composer").addEventListener("submit", (e) => {
-  e.preventDefault();
-  send();
-});
-if ($("attachBtn") && $("filePick")) {
-  $("attachBtn").addEventListener("click", () => $("filePick").click());
-  $("filePick").addEventListener("change", () => {
-    addPending($("filePick").files);
-    $("filePick").value = "";
-  });
-}
-["dragenter", "dragover"].forEach((ev) => {
-  $("composer").addEventListener(ev, (e) => {
-    e.preventDefault();
-    $("composer").classList.add("drop");
-  });
-});
-["dragleave", "drop"].forEach((ev) => {
-  $("composer").addEventListener(ev, (e) => {
-    e.preventDefault();
-    $("composer").classList.remove("drop");
-  });
-});
-$("composer").addEventListener("drop", (e) => {
-  if (e.dataTransfer && e.dataTransfer.files) addPending(e.dataTransfer.files);
-});
-document.addEventListener("paste", (e) => {
-  const t = e.target;
-  if (t && t.closest && t.closest("input, textarea") && t.id !== "prompt") return;
-  onPasteImages(e);
-}, true);
-if ($("pasteImgBtn")) {
-  $("pasteImgBtn").addEventListener("click", () => attachClipboardImages({ warn: true }));
-}
-if ($("continueBtn")) {
-  $("continueBtn").addEventListener("click", () => {
-    setPrompt("Lanjutkan sampai proyek benar-benar selesai. Tulis semua file yang masih kurang, jangan berhenti di tengah.");
-    send();
-  });
-}
-$("prompt").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
+
+function bindComposer() {
+  const comp = $("composer");
+  if (!comp) return;
+  comp.addEventListener("submit", (e) => {
     e.preventDefault();
     send();
+  });
+  if ($("attachBtn") && $("filePick")) {
+    $("attachBtn").addEventListener("click", () => $("filePick").click());
+    $("filePick").addEventListener("change", () => {
+      addPending($("filePick").files);
+      $("filePick").value = "";
+    });
   }
-});
-$("newSession").addEventListener("click", async () => {
-  const s = await api("/api/sessions", {
-    method: "POST",
-    body: JSON.stringify({
-      workspace: state.settings?.workspace || "",
-      model: (state.settings && state.settings.model) || "",
-    }),
+  ["dragenter", "dragover"].forEach((ev) => {
+    comp.addEventListener(ev, (e) => {
+      e.preventDefault();
+      comp.classList.add("drop");
+    });
   });
-  await refreshSessions();
-  await openSession(s.id);
-  showEmpty();
-  $("sessionTitle").textContent = s.title;
-  focusPrompt();
-});
+  ["dragleave", "drop"].forEach((ev) => {
+    comp.addEventListener(ev, (e) => {
+      e.preventDefault();
+      comp.classList.remove("drop");
+    });
+  });
+  comp.addEventListener("drop", (e) => {
+    if (e.dataTransfer && e.dataTransfer.files) addPending(e.dataTransfer.files);
+  });
+  document.addEventListener("paste", (e) => {
+    const t = e.target;
+    if (t && t.closest && t.closest("input, textarea") && t.id !== "prompt") return;
+    onPasteImages(e);
+  }, true);
+  if ($("pasteImgBtn")) {
+    $("pasteImgBtn").addEventListener("click", () => attachClipboardImages({ warn: true }));
+  }
+  if ($("imageGenBtn")) {
+    $("imageGenBtn").addEventListener("click", () => openImageModal());
+  }
+  if ($("continueBtn")) {
+    $("continueBtn").addEventListener("click", () => {
+      setPrompt("Lanjutkan sampai proyek benar-benar selesai. Tulis semua file yang masih kurang, jangan berhenti di tengah.");
+      send();
+    });
+  }
+  const pEl = $("prompt");
+  if (pEl) {
+    pEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    });
+  }
+}
+
+if ($("newSession")) {
+  $("newSession").addEventListener("click", async () => {
+    const s = await api("/api/sessions", {
+      method: "POST",
+      body: JSON.stringify({
+        workspace: state.settings?.workspace || "",
+        model: (state.settings && state.settings.model) || "",
+      }),
+    });
+    await refreshSessions();
+    await openSession(s.id);
+    showEmpty();
+    $("sessionTitle").textContent = s.title;
+    focusPrompt();
+  });
+}
 if ($("copyChatBtn")) {
   $("copyChatBtn").addEventListener("click", () => copyText(threadText(), $("copyChatBtn")));
 }
-$("undoBtn").addEventListener("click", async () => {
-  if (!state.session) return;
-  const r = await api(`/api/sessions/${state.session.id}/undo`, { method: "POST" });
-  if (r.session) {
-    state.session = r.session;
-    renderMessages(state.session);
-    loadTree();
-  } else {
-    alert(r.message || "Tidak ada undo");
-  }
-});
-$("stopBtn").addEventListener("click", async () => {
-  if (!state.session) return;
-  const sid = state.session.id;
-  const run = state.runs[sid];
-  if (run && run.abort) {
-    try { run.abort.abort(); } catch (e) {}
-  }
-  await api(`/api/sessions/${sid}/stop`, { method: "POST" });
-});
+if ($("undoBtn")) {
+  $("undoBtn").addEventListener("click", async () => {
+    if (!state.session) return;
+    const r = await api(`/api/sessions/${state.session.id}/undo`, { method: "POST" });
+    if (r.session) {
+      state.session = r.session;
+      renderMessages(state.session);
+      loadTree();
+    } else {
+      alert(r.message || "Tidak ada undo");
+    }
+  });
+}
+if ($("stopBtn")) {
+  $("stopBtn").addEventListener("click", async () => {
+    if (!state.session) return;
+    const sid = state.session.id;
+    const run = state.runs[sid];
+    if (run && run.abort) {
+      try { run.abort.abort(); } catch {}
+    }
+    await api(`/api/sessions/${sid}/stop`, { method: "POST" });
+  });
+}
+
 function openSettingsModal() {
   if ($("settingsModal")) $("settingsModal").hidden = false;
   closeMoreMenu();
   closeSide();
 }
 function closeSide() {
-  $("sidebar") && $("sidebar").classList.remove("open");
-  $("sideScrim") && $("sideScrim").classList.remove("open");
+  if ($("sidebar")) $("sidebar").classList.remove("open");
+  if ($("sideScrim")) $("sideScrim").classList.remove("open");
 }
 function closeMoreMenu() {
   const m = $("moreMenu");
   if (m) m.hidden = true;
 }
+function toggleMoreMenu() {
+  const m = $("moreMenu");
+  if (!m) return;
+  if (m.hidden) {
+    const btn = $("moreBtn");
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    m.style.top = (r.bottom + 6) + "px";
+    m.style.right = Math.max(8, window.innerWidth - r.right) + "px";
+    m.hidden = false;
+  } else {
+    m.hidden = true;
+  }
+}
+
 if ($("openSettings")) $("openSettings").addEventListener("click", openSettingsModal);
 if ($("openSettingsTop")) $("openSettingsTop").addEventListener("click", openSettingsModal);
+
 if ($("menuBtn")) {
   $("menuBtn").addEventListener("click", () => {
     const s = $("sidebar");
@@ -1080,41 +1111,41 @@ if ($("sessionList")) {
     if (window.matchMedia("(max-width: 900px)").matches) closeSide();
   });
 }
+
+// FIXED moreBtn: ☰ sesi, ⋮ pengaturan - jangan syntax error, jangan return dini
 if ($("moreBtn")) {
   $("moreBtn").addEventListener("click", (e) => {
     e.stopPropagation();
-    if ($("moreMenu")) { closeMoreMenu(); return; }
-    const menu = document.createElement("div");
-    menu.id = "moreMenu";
-    menu.className = "more-menu";
-    menu.innerHTML = `
-      <button type="button" data-act="settings">Pengaturan</button>
-      <button type="button" data-act="model">Pilih model</button>
-      <button type="button" data-act="copy">Salin chat</button>
-      <button type="button" data-act="undo">Undo file</button>
-    `;
-    document.body.appendChild(menu);
-    const r = $("moreBtn").getBoundingClientRect();
-    menu.style.top = (r.bottom + 4) + "px";
-    menu.style.right = Math.max(8, window.innerWidth - r.right) + "px";
-    menu.addEventListener("click", (ev) => {
-      const act = ev.target.closest("button") && ev.target.closest("button").dataset.act;
-      closeMoreMenu();
-      if (act === "settings") openSettingsModal();
-      if (act === "copy" && $("copyChatBtn")) $("copyChatBtn").click();
-      if (act === "undo" && $("undoBtn")) $("undoBtn").click();
-      if (act === "model") openModelPicker();
-    });
+    toggleMoreMenu();
   });
   document.addEventListener("click", (e) => {
-    if ($("moreMenu") && !e.target.closest("#moreMenu") && !e.target.closest("#moreBtn")) closeMoreMenu();
+    const mm = $("moreMenu");
+    if (!mm || mm.hidden) return;
+    if (e.target.closest("#moreMenu") || e.target.closest("#moreBtn")) return;
+    mm.hidden = true;
   });
 }
-$("useAppFolder").addEventListener("click", () => {
-  const suggested = state.settings?.suggested_workspace || "/home/user/arka";
-  $("cfgWorkspace").value = suggested;
+
+// more menu actions
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest && e.target.closest("#moreMenu button[data-act]");
+  if (!btn) return;
+  const act = btn.dataset.act;
+  closeMoreMenu();
+  if (act === "settings") openSettingsModal();
+  if (act === "copy" && $("copyChatBtn")) $("copyChatBtn").click();
+  if (act === "undo" && $("undoBtn")) $("undoBtn").click();
+  if (act === "model") openModelPicker();
+  if (act === "image") openImageModal();
 });
-$("closeSettings").addEventListener("click", () => { $("settingsModal").hidden = true; });
+
+if ($("useAppFolder")) {
+  $("useAppFolder").addEventListener("click", () => {
+    const suggested = state.settings?.suggested_workspace || "/home/user/arka";
+    if ($("cfgWorkspace")) $("cfgWorkspace").value = suggested;
+  });
+}
+if ($("closeSettings")) $("closeSettings").addEventListener("click", () => { if ($("settingsModal")) $("settingsModal").hidden = true; });
 if ($("pickFolderBtn")) {
   $("pickFolderBtn").addEventListener("click", async () => {
     try {
@@ -1123,7 +1154,7 @@ if ($("pickFolderBtn")) {
         if (p && $("cfgWorkspace")) $("cfgWorkspace").value = p;
         return;
       }
-    } catch (e) {}
+    } catch {}
     if (window.ArkaNative && window.ArkaNative.pickFolder) {
       window.ArkaNative.pickFolder();
       return;
@@ -1131,33 +1162,39 @@ if ($("pickFolderBtn")) {
     alert("Pemilih folder hanya di aplikasi Arka (Windows/Android), bukan browser biasa.");
   });
 }
-$("saveSettings").addEventListener("click", async () => {
-  try {
-    await api("/api/settings", {
-      method: "PUT",
-      body: JSON.stringify({
-        workspace: $("cfgWorkspace").value.trim(),
-        api_base: $("cfgBase").value.trim(),
-        model: $("cfgModel").value.trim(),
-        api_key: $("cfgKey").value.trim(),
-      }),
-    });
-  } catch (e) {
-    alert(e.message || String(e));
-    return;
-  }
-  await loadSettings();
-  await loadTree();
-  $("settingsModal").hidden = true;
-  loadModels().catch(() => {});
-});
+if ($("saveSettings")) {
+  $("saveSettings").addEventListener("click", async () => {
+    try {
+      await api("/api/settings", {
+        method: "PUT",
+        body: JSON.stringify({
+          workspace: $("cfgWorkspace") ? $("cfgWorkspace").value.trim() : undefined,
+          api_base: $("cfgBase") ? $("cfgBase").value.trim() : undefined,
+          model: $("cfgModel") ? $("cfgModel").value.trim() : undefined,
+          api_key: $("cfgKey") ? $("cfgKey").value.trim() : undefined,
+          github_username: $("cfgGithubUser") ? $("cfgGithubUser").value.trim() : undefined,
+          github_token: $("cfgGithubToken") ? $("cfgGithubToken").value.trim() : undefined,
+          github_repo: $("cfgGithubRepo") ? $("cfgGithubRepo").value.trim() : undefined,
+        }),
+      });
+    } catch (e) {
+      alert(e.message || String(e));
+      return;
+    }
+    await loadSettings();
+    await loadTree();
+    if ($("settingsModal")) $("settingsModal").hidden = true;
+    loadModels().catch(() => {});
+  });
+}
+
 document.querySelectorAll(".presets button").forEach((b) => {
   b.addEventListener("click", () => {
-    $("cfgBase").value = b.dataset.base;
-    $("cfgModel").value = b.dataset.model;
-    /* preset hanya isi form Pengaturan, tidak ganti model sesi yang sedang jalan */
+    if ($("cfgBase")) $("cfgBase").value = b.dataset.base;
+    if ($("cfgModel")) $("cfgModel").value = b.dataset.model;
   });
 });
+
 function bind(id, ev, fn) {
   const el = $(id);
   if (el) el.addEventListener(ev, fn);
@@ -1185,15 +1222,17 @@ bind("closeOverlay", "click", () => {
   if (ov) ov.hidden = true;
   if ($("overlayFrame")) $("overlayFrame").src = "about:blank";
 });
+
 applyModeButtons();
 enableSplit();
+bindComposer();
 
 function setModelStatus(msg) {
   if ($("modelStatus")) $("modelStatus").textContent = msg || "";
   if ($("cfgModelHint") && msg) $("cfgModelHint").textContent = msg;
 }
 
-const SEED_MODELS = ["auto", "auto/coding", "auto/fast", "auto/cheap", "auto/quality"];
+const SEED_MODELS = ["auto", "auto/coding", "auto/fast", "auto/cheap", "auto/quality", "sdxl", "flux", "flux-lightning"];
 
 function ensureSeedModels() {
   const have = new Set(state.models || []);
@@ -1218,7 +1257,7 @@ function fillModelDatalist() {
     const meta = (state.modelItems || []).find((m) => m.id === id) || {};
     const b = document.createElement("button");
     b.type = "button";
-    b.textContent = (meta.type === "combo" ? "combo · " : "") + id;
+    b.textContent = (meta.type === "combo" ? "combo · " : "") + (meta.type === "image" ? "🖼 " : "") + id;
     b.addEventListener("click", () => {
       if ($("cfgModel")) $("cfgModel").value = id;
       pickModel(id);
@@ -1267,8 +1306,10 @@ function renderModelList() {
     return;
   }
   const ranked = shown.slice().sort((a, b) => {
-    const ta = ((state.modelItems || []).find((m) => m.id === a) || {}).type === "combo" ? 0 : 1;
-    const tb = ((state.modelItems || []).find((m) => m.id === b) || {}).type === "combo" ? 0 : 1;
+    const ma = (state.modelItems || []).find((m) => m.id === a) || {};
+    const mb = (state.modelItems || []).find((m) => m.id === b) || {};
+    const ta = ma.type === "combo" ? 0 : ma.type === "image" ? 2 : 1;
+    const tb = mb.type === "combo" ? 0 : mb.type === "image" ? 2 : 1;
     return ta - tb;
   });
   for (const id of ranked) {
@@ -1276,7 +1317,7 @@ function renderModelList() {
     const b = document.createElement("button");
     b.type = "button";
     b.className = id === current ? "on" : "";
-    b.textContent = (meta.type === "combo" ? "combo · " : "") + id;
+    b.textContent = (meta.type === "combo" ? "combo · " : "") + (meta.type === "image" ? "🖼 " : "") + id;
     b.title = id;
     b.addEventListener("click", () => pickModel(id));
     box.appendChild(b);
@@ -1335,6 +1376,7 @@ async function pickModel(id) {
   try {
     if (state.session) {
       state.session.model = id;
+      // PATCH sesi - fix bug Internal Server Error, kirim model field
       await api(`/api/sessions/${state.session.id}`, { method: "PATCH", body: JSON.stringify({ model: id }) });
     } else {
       if (state.settings) state.settings.model = id;
@@ -1438,7 +1480,7 @@ function fillIframe(iframe, html) {
       doc.write(src);
       doc.close();
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   };
@@ -1508,7 +1550,7 @@ function paintHtml(host, html) {
     const doc = new DOMParser().parseFromString(src, "text/html");
     extraCss = [...doc.querySelectorAll("style")].map((s) => s.textContent).join("\n");
     bodyHtml = doc.body ? doc.body.innerHTML : src;
-  } catch (e) {
+  } catch {
     bodyHtml = `<pre>${esc(src)}</pre>`;
   }
   root.innerHTML = `<style>
@@ -1528,21 +1570,16 @@ function openOverlay(p) {
   else fillIframe(frame, `<!DOCTYPE html><pre style="white-space:pre-wrap;padding:16px">${esc(p.content || "")}</pre>`);
 }
 
-function htmlUrl(html) {
-  const blob = new Blob([html || "<p>(kosong)</p>"], { type: "text/html;charset=utf-8" });
-  return URL.createObjectURL(blob);
-}
-
 function renderPreview() {
   const p = state.preview;
   if (!p) {
     hidePreviewPanes();
     paneOn($("preview"));
-    $("preview").textContent = "Pilih file di daftar, atau minta AI membuat index.html.";
-    $("previewName").textContent = "Preview file";
+    if ($("preview")) $("preview").textContent = "Pilih file di daftar, atau minta AI membuat index.html.";
+    if ($("previewName")) $("previewName").textContent = "Preview file";
     return;
   }
-  $("previewName").textContent = p.path + (p.kind ? ` · ${p.kind}` : "");
+  if ($("previewName")) $("previewName").textContent = p.path + (p.kind ? ` · ${p.kind}` : "");
   hidePreviewPanes();
   const wantPreview = state.view === "preview";
   if (wantPreview && p.kind === "html") {
@@ -1555,16 +1592,16 @@ function renderPreview() {
   }
   if (wantPreview && p.kind === "image") {
     paneOn($("previewImg"));
-    $("previewImg").src = `/api/preview-file?path=${encodeURIComponent(p.path)}`;
+    if ($("previewImg")) $("previewImg").src = `/api/preview-file?path=${encodeURIComponent(p.path)}`;
     return;
   }
   if (wantPreview && p.kind === "markdown") {
     paneOn($("previewMd"));
-    $("previewMd").innerHTML = md(p.content || "");
+    if ($("previewMd")) $("previewMd").innerHTML = md(p.content || "");
     return;
   }
   paneOn($("preview"));
-  $("preview").textContent = p.content || "(tidak ada teks)";
+  if ($("preview")) $("preview").textContent = p.content || "(tidak ada teks)";
 }
 
 async function openFile(path, opts = {}) {
@@ -1579,9 +1616,6 @@ async function openFile(path, opts = {}) {
     else state.view = "code";
     document.querySelectorAll("#viewSeg button").forEach((x) => x.classList.toggle("on", x.dataset.view === state.view));
     renderPreview();
-    if (opts.inChat && typeof attachChatPreview === "function") {
-      attachChatPreview(opts.chatRoot || document.querySelector(".msg.assistant:last-of-type .bubble"), f);
-    }
   } catch (e) {
     hidePreviewPanes();
     paneOn($("preview"));
@@ -1592,6 +1626,7 @@ async function openFile(path, opts = {}) {
 
 function showChanged(files) {
   const box = $("changedFiles");
+  if (!box) return;
   const items = (files || []).filter((f) => f.action !== "delete" && f.path);
   if (!items.length) {
     box.hidden = true;
@@ -1606,12 +1641,94 @@ function showChanged(files) {
   openFile(items[items.length - 1].path);
 }
 
+// ---- GitHub UI ----
+async function githubStatus() {
+  const out = $("githubStatusOut");
+  if (out) out.textContent = "Memuat status…";
+  try {
+    const data = await api("/api/github/status", { method: "POST", body: JSON.stringify({}) });
+    if (out) out.textContent = JSON.stringify(data, null, 2);
+  } catch (e) {
+    if (out) out.textContent = "Error: " + (e.message || e);
+  }
+}
+async function githubPush() {
+  const out = $("githubStatusOut");
+  if (out) out.textContent = "Push ke GitHub… jangan tutup.";
+  if (!confirm("Kirim semua file di folder proyek ke GitHub repo di Pengaturan?")) {
+    if (out) out.textContent = "Dibatalkan.";
+    return;
+  }
+  try {
+    const data = await api("/api/github/push", { method: "POST", body: JSON.stringify({ message: "Update from Arka Android" }) });
+    if (out) out.textContent = JSON.stringify(data, null, 2);
+    alert("Berhasil push: " + (data.message || data.repo));
+    await loadTree();
+  } catch (e) {
+    if (out) out.textContent = "Error push: " + (e.message || e);
+    alert("Gagal push: " + (e.message || e));
+  }
+}
+if ($("githubStatusBtn")) $("githubStatusBtn").addEventListener("click", githubStatus);
+if ($("githubPushBtn")) $("githubPushBtn").addEventListener("click", githubPush);
+
+// ---- Image generation UI ----
+function openImageModal() {
+  if ($("imageModal")) $("imageModal").hidden = false;
+  closeMoreMenu();
+}
+function closeImageModal() {
+  if ($("imageModal")) $("imageModal").hidden = true;
+}
+if ($("closeImage")) $("closeImage").addEventListener("click", closeImageModal);
+if ($("imageModal")) {
+  $("imageModal").addEventListener("click", (e) => {
+    if (e.target.id === "imageModal") closeImageModal();
+  });
+}
+async function doImageGen() {
+  const promptEl = $("imgPrompt");
+  const modelEl = $("imgModel");
+  const sizeEl = $("imgSize");
+  const statusEl = $("imgStatus");
+  const prompt = promptEl ? promptEl.value.trim() : "";
+  if (!prompt) {
+    alert("Prompt kosong");
+    return;
+  }
+  const model = modelEl ? modelEl.value.trim() : "sdxl";
+  const size = sizeEl ? sizeEl.value : "1024x1024";
+  if (statusEl) statusEl.textContent = "Generate gambar… tunggu 10-30 detik.";
+  try {
+    const data = await api("/api/generate-image", {
+      method: "POST",
+      body: JSON.stringify({ prompt, model, size }),
+    });
+    if (statusEl) statusEl.textContent = "Berhasil: " + (data.saved_path || "gambar dibuat");
+    // show in messages
+    const box = $("messages");
+    if (box) {
+      const wrap = document.createElement("div");
+      wrap.className = "msg assistant";
+      wrap.innerHTML = `<div class="who">Arka · 🖼</div><div class="bubble"><div class="md"><p>Gambar: ${esc(prompt)} → ${esc(data.saved_path || "")}</p></div></div>`;
+      box.appendChild(wrap);
+      box.scrollTop = box.scrollHeight;
+    }
+    closeImageModal();
+    await loadTree();
+    if (data.saved_path) openFile(data.saved_path);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = "Gagal: " + (e.message || e);
+  }
+}
+if ($("doImage")) $("doImage").addEventListener("click", doImageGen);
+
 (async function init() {
   await loadSettings();
   await refreshSessions();
   await loadTree();
   if (!state.settings.workspace) {
-    $("settingsModal").hidden = false;
+    if ($("settingsModal")) $("settingsModal").hidden = false;
   }
   if (state.sessions.length) {
     await openSession(state.sessions[0].id);

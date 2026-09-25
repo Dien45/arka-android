@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import re
+import base64
+import time
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +16,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import tools
-from .agent import request_stop, run_agent
+from .agent import request_stop, run_agent, sanitize_model, is_image_model
 from .paths import APP_DIR
-from .sessions import delete_session, list_sessions, load_session, new_session, save_session, update_session
+from .sessions import delete_session, list_sessions, load_session, new_session, save_session, update_session, rename_session
 from .settings_store import load_settings, save_settings
 
 WEB = APP_DIR / "web"
@@ -36,6 +38,9 @@ class SettingsIn(BaseModel):
     model: str | None = None
     workspace: str | None = None
     max_iterations: int | None = None
+    github_username: str | None = None
+    github_token: str | None = None
+    github_repo: str | None = None
 
 
 class SessionIn(BaseModel):
@@ -64,6 +69,17 @@ class SessionPatch(BaseModel):
     model: str | None = None
 
 
+class GithubPushIn(BaseModel):
+    message: str | None = None
+    workspace: str | None = None
+
+
+class ImageGenIn(BaseModel):
+    prompt: str
+    model: str | None = None
+    size: str | None = "1024x1024"
+
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"ok": "arka"}
@@ -73,8 +89,13 @@ def health() -> dict[str, str]:
 def get_settings() -> dict[str, Any]:
     s = load_settings()
     key = s.get("api_key") or ""
+    # JANGAN isi api_key="Tutup" — ensure empty if placeholder
+    if str(key).lower() == "tutup":
+        key = ""
+        s["api_key"] = ""
     s["api_key_set"] = bool(key)
     s["api_key"] = key
+    # don't expose full token in list? but UI needs to show masked? We return token as is for settings modal, but github token separate
     try:
         resolved = str(tools.pick_workspace(s.get("workspace")))
         if resolved != s.get("workspace"):
@@ -86,6 +107,9 @@ def get_settings() -> dict[str, Any]:
         s["workspace_error"] = str(e)
         s["workspace"] = str(APP_DIR)
     s["suggested_workspace"] = str(APP_DIR)
+    # ensure github defaults
+    if not s.get("github_repo"):
+        s["github_repo"] = "Dien45/arka-android"
     return s
 
 
@@ -99,8 +123,6 @@ def _body_dict(body: Any) -> dict[str, Any]:
 
 @app.api_route("/api/settings", methods=["PUT", "POST"])
 def put_settings(body: SettingsIn) -> dict[str, Any]:
-    from .agent import sanitize_model
-
     patch = {k: v for k, v in _body_dict(body).items() if v is not None}
     if "model" in patch:
         patch["model"] = sanitize_model(str(patch["model"] or ""))
@@ -109,6 +131,11 @@ def put_settings(body: SettingsIn) -> dict[str, Any]:
         if b and "://" not in b:
             b = "http://" + b
         patch["api_base"] = b.rstrip("/")
+    if "api_key" in patch:
+        k = str(patch.get("api_key") or "").strip()
+        if k.lower() == "tutup":
+            k = ""
+        patch["api_key"] = k
     if "workspace" in patch:
         raw = str(patch.get("workspace") or "").strip()
         if not raw:
@@ -123,6 +150,12 @@ def put_settings(body: SettingsIn) -> dict[str, Any]:
                 patch["workspace"] = str(tools.resolve_workspace(str(p)))
             except ValueError as e:
                 raise HTTPException(400, str(e)) from e
+    if "github_repo" in patch:
+        repo = str(patch.get("github_repo") or "").strip()
+        if "github.com/" in repo:
+            repo = repo.split("github.com/")[-1].strip().strip("/").replace(".git", "")
+        patch["github_repo"] = repo[:200] or "Dien45/arka-android"
+    # github_username and token are free form
     s = save_settings(patch)
     s["api_key_set"] = bool(s.get("api_key"))
     return s
@@ -142,8 +175,6 @@ def create_session(body: SessionIn | None = None) -> dict[str, Any]:
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
     save_settings({"workspace": ws})
-    from .agent import sanitize_model
-
     model = sanitize_model((body.model if body else None) or settings.get("model") or "")
     return new_session(ws, model=model)
 
@@ -158,10 +189,18 @@ def get_session(sid: str) -> dict[str, Any]:
 
 @app.patch("/api/sessions/{sid}")
 def patch_session(sid: str, body: SessionPatch) -> dict[str, Any]:
-    s = rename_session(sid, body.title)
-    if not s:
+    """Fix bug Internal Server Error: handle both title and model via PATCH."""
+    session = load_session(sid)
+    if not session:
         raise HTTPException(404, "Sesi tidak ada")
-    return s
+    # update title if provided
+    title = body.title
+    model = body.model
+    # Use update_session which handles both
+    updated = update_session(sid, title=title, model=model)
+    if not updated:
+        raise HTTPException(404, "Sesi tidak ada")
+    return updated
 
 
 @app.delete("/api/sessions/{sid}")
@@ -235,19 +274,22 @@ SEED_MODELS = [
     {"id": "auto/fast", "name": "OmniRoute fast", "type": ""},
     {"id": "auto/cheap", "name": "OmniRoute cheap", "type": ""},
     {"id": "auto/quality", "name": "OmniRoute quality", "type": ""},
+    {"id": "sdxl", "name": "SDXL (image)", "type": "image"},
+    {"id": "flux", "name": "Flux (image)", "type": "image"},
+    {"id": "flux-lightning", "name": "Flux Lightning (image)", "type": "image"},
 ]
 
 
 @app.post("/api/models")
 async def list_models(body: ModelsIn | None = None) -> dict[str, Any]:
-    from .agent import sanitize_model
-
     settings = load_settings()
     if body:
         if body.api_base:
             settings = {**settings, "api_base": body.api_base}
         if body.api_key not in (None, ""):
-            settings = {**settings, "api_key": body.api_key}
+            k = str(body.api_key).strip()
+            if k.lower() != "tutup":
+                settings = {**settings, "api_key": k}
     catalog: list[dict[str, Any]] = []
     err = ""
     try:
@@ -434,6 +476,118 @@ def set_workspace(body: WorkspaceIn) -> dict[str, Any]:
     resolved = str(p.resolve())
     save_settings({"workspace": resolved})
     return {"workspace": resolved}
+
+
+# ---- GitHub endpoints ----
+@app.get("/api/github/status")
+def github_status_api(workspace: str | None = None) -> dict[str, Any]:
+    from .github_sync import github_status
+
+    settings = load_settings()
+    ws = workspace or settings.get("workspace") or str(APP_DIR)
+    try:
+        return github_status(ws, settings)
+    except Exception as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@app.post("/api/github/status")
+def github_status_post(body: GithubPushIn | None = None) -> dict[str, Any]:
+    from .github_sync import github_status
+
+    settings = load_settings()
+    ws = (body.workspace if body else None) or settings.get("workspace") or str(APP_DIR)
+    try:
+        return github_status(ws, settings)
+    except Exception as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@app.post("/api/github/push")
+def github_push_api(body: GithubPushIn | None = None) -> dict[str, Any]:
+    from .github_sync import github_push
+
+    settings = load_settings()
+    ws = (body.workspace if body else None) or settings.get("workspace") or str(APP_DIR)
+    msg = (body.message if body else None) or ""
+    try:
+        res = github_push(ws, settings, message=msg)
+    except Exception as e:
+        raise HTTPException(400, str(e)) from e
+    if not res.get("ok"):
+        raise HTTPException(400, res.get("error") or "Push gagal")
+    return res
+
+
+# ---- Image generation endpoint ----
+@app.post("/api/images/generations")
+@app.post("/api/generate-image")
+async def generate_image_api(body: ImageGenIn) -> dict[str, Any]:
+    import httpx
+
+    settings = load_settings()
+    api_base = (settings.get("api_base") or "").strip()
+    api_key = (settings.get("api_key") or "").strip()
+    if api_key.lower() == "tutup":
+        api_key = ""
+    if not api_base:
+        raise HTTPException(400, "API base kosong")
+    if not api_key:
+        raise HTTPException(400, "API key kosong")
+    if not body.prompt.strip():
+        raise HTTPException(400, "Prompt kosong")
+
+    # normalize base
+    def norm(u: str) -> str:
+        u = u.strip().strip("<>").rstrip("/")
+        for suffix in ("/chat/completions", "/completions"):
+            if u.endswith(suffix):
+                u = u[: -len(suffix)]
+        return u
+
+    base = norm(api_base)
+    url = f"{base}/images/generations"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+    model_id = (body.model or settings.get("model") or "sdxl").strip()
+    size = (body.size or "1024x1024").strip()
+
+    payload: dict[str, Any] = {"prompt": body.prompt, "n": 1, "size": size, "response_format": "b64_json"}
+    if model_id:
+        payload["model"] = model_id
+
+    try:
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            r = await client.post(url, headers=headers, json=payload)
+            if r.status_code >= 400 and "model" in payload:
+                # retry without model for providers that don't need it
+                payload2 = {k: v for k, v in payload.items() if k != "model"}
+                r2 = await client.post(url, headers=headers, json=payload2)
+                if r2.status_code < 400:
+                    r = r2
+            if r.status_code >= 400:
+                raise HTTPException(r.status_code, f"{r.text[:800]}")
+            data = r.json()
+            # optionally save to workspace
+            try:
+                ws = str(tools.pick_workspace(settings.get("workspace")))
+                items = data.get("data") or []
+                if items:
+                    b64 = items[0].get("b64_json")
+                    if b64:
+                        gen_dir = Path(ws) / "generated_images"
+                        gen_dir.mkdir(parents=True, exist_ok=True)
+                        fname = f"img_{int(time.time())}.png"
+                        target = gen_dir / fname
+                        target.write_bytes(base64.b64decode(b64))
+                        rel = str(target.relative_to(Path(ws))).replace("\\", "/")
+                        data["saved_path"] = rel
+            except Exception:
+                pass
+            return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(400, str(e)) from e
 
 
 @app.get("/")

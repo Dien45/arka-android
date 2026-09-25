@@ -23,6 +23,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -162,9 +163,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSettings() {
+        val scroll = ScrollView(this)
         val box = LinearLayout(this)
         box.orientation = LinearLayout.VERTICAL
         box.setPadding(40, 24, 40, 8)
+        scroll.addView(box)
+
         fun field(hint: String, password: Boolean = false): EditText {
             val e = EditText(this)
             e.hint = hint
@@ -175,7 +179,7 @@ class MainActivity : AppCompatActivity() {
             return e
         }
         val base = field("API base URL")
-        val model = field("Model")
+        val model = field("Model (auto, gpt-4o-mini, sdxl, flux)")
         val key = field("API key", true)
         val ws = field("Folder proyek")
         folderField = ws
@@ -184,6 +188,10 @@ class MainActivity : AppCompatActivity() {
         pick.setOnClickListener { launchTreePicker() }
         box.addView(pick)
 
+        val ghUser = field("GitHub Username")
+        val ghToken = field("GitHub Token (PAT)", true)
+        val ghRepo = field("GitHub Repo (Dien45/arka-android)")
+
         Thread {
             try {
                 val raw = URL("http://127.0.0.1:8765/api/settings").readText()
@@ -191,15 +199,19 @@ class MainActivity : AppCompatActivity() {
                 ui.post {
                     base.setText(j.optString("api_base"))
                     model.setText(j.optString("model"))
-                    key.setText(j.optString("api_key"))
+                    val k = j.optString("api_key")
+                    key.setText(if (k.equals("Tutup", ignoreCase = true)) "" else k)
                     ws.setText(j.optString("workspace"))
+                    ghUser.setText(j.optString("github_username"))
+                    ghToken.setText(j.optString("github_token"))
+                    ghRepo.setText(j.optString("github_repo", "Dien45/arka-android"))
                 }
             } catch (_: Exception) {}
         }.start()
 
         AlertDialog.Builder(this)
             .setTitle("Pengaturan Arka")
-            .setView(box)
+            .setView(scroll)
             .setNegativeButton("Batal", null)
             .setPositiveButton("Simpan") { _, _ ->
                 Thread {
@@ -212,6 +224,9 @@ class MainActivity : AppCompatActivity() {
                             .put("model", model.text.toString().trim())
                             .put("api_key", key.text.toString().trim())
                             .put("workspace", folder)
+                            .put("github_username", ghUser.text.toString().trim())
+                            .put("github_token", ghToken.text.toString().trim())
+                            .put("github_repo", ghRepo.text.toString().trim().ifEmpty { "Dien45/arka-android" })
                             .toString()
                         val c = URL("http://127.0.0.1:8765/api/settings").openConnection() as HttpURLConnection
                         c.requestMethod = "POST"
@@ -296,7 +311,7 @@ class MainActivity : AppCompatActivity() {
         private const val FIT_JS = """
             (function(){
               var s=document.createElement('style');
-              s.textContent='#app{grid-template-columns:1fr!important;height:100%!important;} html,body{height:100%;margin:0;overflow:hidden;} .gutter,.files{display:none!important;} .main{min-height:100%;}';
+              s.textContent='#app{grid-template-columns:1fr!important;height:100%!important;} html,body{height:100%;margin:0;overflow:hidden;} .gutter,.files{display:none!important;} .main{min-height:100%;} .sheet.scrollable{max-height:85vh;overflow-y:auto;}';
               document.documentElement.appendChild(s);
             })();
         """

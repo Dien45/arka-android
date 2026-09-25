@@ -4,6 +4,8 @@ import os
 import re
 import shutil
 import subprocess
+import base64
+import time
 from pathlib import Path
 from typing import Any
 
@@ -457,6 +459,130 @@ def tree(workspace: str, max_nodes: int = 800) -> list[dict[str, Any]]:
     return nodes
 
 
+# ---- New: GitHub & Image tools ----
+
+def github_status_tool(workspace: str) -> str:
+    from .settings_store import load_settings
+    from .github_sync import github_status
+
+    settings = load_settings()
+    try:
+        info = github_status(workspace, settings)
+    except Exception as e:
+        return f"Error github_status: {e}"
+    # format nicely, don't expose token
+    lines = []
+    lines.append(f"Repo: {info.get('repo')}")
+    lines.append(f"Token set: {info.get('token_set')}")
+    lines.append(f"Username: {info.get('username') or '(kosong)'}")
+    lines.append(f"Workspace: {info.get('workspace_resolved') or info.get('workspace')}")
+    if info.get("remote_url"):
+        lines.append(f"Remote: {info.get('remote_url')}")
+    if info.get("branch"):
+        lines.append(f"Branch: {info.get('branch')}")
+    if info.get("local_sha"):
+        lines.append(f"Local SHA: {info.get('local_sha')[:12]}")
+    if info.get("remote_sha"):
+        lines.append(f"Remote SHA: {info.get('remote_sha')}")
+    if info.get("dirty") is not None:
+        lines.append(f"Dirty: {info.get('dirty')}")
+    if info.get("error"):
+        lines.append(f"Error: {info.get('error')}")
+    if info.get("warning"):
+        lines.append(f"Warning: {info.get('warning')}")
+    lines.append(f"OK: {info.get('ok')}")
+    return "\n".join(lines)
+
+
+def github_push_tool(workspace: str, message: str | None = None) -> tuple[str, list[dict[str, Any]]]:
+    from .settings_store import load_settings
+    from .github_sync import github_push
+
+    settings = load_settings()
+    try:
+        res = github_push(workspace, settings, message=message)
+    except Exception as e:
+        return f"Error github_push: {e}", []
+    if res.get("ok"):
+        return f"{res.get('message')} | local {res.get('local_sha')} remote {res.get('remote_sha','')}", []
+    else:
+        return f"Gagal push: {res.get('error')}\n{res.get('output','')[:1000]}", []
+
+
+def generate_image_tool(workspace: str, prompt: str, model: str | None = None, size: str = "1024x1024") -> tuple[str, list[dict[str, Any]]]:
+    from .settings_store import load_settings
+
+    settings = load_settings()
+    api_base = (settings.get("api_base") or "").strip().rstrip("/")
+    api_key = (settings.get("api_key") or "").strip()
+    if api_key.lower() == "tutup":
+        api_key = ""
+    if not api_base:
+        return "API base kosong. Isi di Pengaturan.", []
+    if not api_key:
+        return "API key kosong. Isi di Pengaturan.", []
+    model_id = (model or settings.get("model") or "").strip()
+    # default to sdxl if empty or not image model? keep as is
+    if not model_id:
+        model_id = "sdxl"
+
+    # Normalize base
+    def norm_base(u: str) -> str:
+        u = u.strip().strip("<>").rstrip("/")
+        for suffix in ("/chat/completions", "/completions"):
+            if u.endswith(suffix):
+                u = u[: -len(suffix)]
+        return u
+
+    base = norm_base(api_base)
+    url = f"{base}/images/generations"
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+    payload: dict[str, Any] = {"prompt": prompt, "n": 1, "size": size, "response_format": "b64_json"}
+    # Some providers require model, some don't. Include if looks like image model or sdxl/flux
+    if model_id:
+        payload["model"] = model_id
+
+    try:
+        with httpx.Client(timeout=90.0) as client:
+            r = client.post(url, headers=headers, json=payload)
+            if r.status_code >= 400:
+                # try without model
+                if "model" in payload:
+                    payload2 = {k: v for k, v in payload.items() if k != "model"}
+                    r2 = client.post(url, headers=headers, json=payload2)
+                    if r2.status_code < 400:
+                        r = r2
+                    else:
+                        return f"Gagal generate gambar {r.status_code}: {r.text[:800]}\nRetry {r2.status_code}: {r2.text[:500]}", []
+                else:
+                    return f"Gagal generate gambar {r.status_code}: {r.text[:800]}", []
+            data = r.json()
+            items = data.get("data") or []
+            if not items:
+                return f"Tidak ada data gambar: {str(data)[:500]}", []
+            first = items[0]
+            b64 = first.get("b64_json")
+            img_url = first.get("url")
+            root = resolve_workspace(workspace)
+            gen_dir = root / "generated_images"
+            gen_dir.mkdir(parents=True, exist_ok=True)
+            fname = f"img_{int(time.time())}.png"
+            target = gen_dir / fname
+            if b64:
+                target.write_bytes(base64.b64decode(b64))
+            elif img_url:
+                rr = client.get(img_url, timeout=60.0)
+                rr.raise_for_status()
+                target.write_bytes(rr.content)
+            else:
+                return f"Format tidak dikenal: {str(first)[:500]}", []
+            rel = str(target.relative_to(root)).replace("\\", "/")
+            snap = {"path": str(target), "existed": False, "content": ""}
+            return f"Gambar disimpan: {rel} ({target.stat().st_size} bytes) prompt: {prompt[:200]}", [snap]
+    except Exception as e:
+        return f"Error generate_image: {e}", []
+
+
 TOOL_SCHEMAS = [
     {
         "type": "function",
@@ -557,7 +683,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "bash",
-            "description": "Run a shell command in the workspace (cmd on Windows, bash on Unix). Can install packages (pip, npm), run tests, start scripts, git, etc.",
+            "description": "Run a shell command in the workspace (cmd on Windows, bash on Unix). Can install packages (pip, npm), run tests, start scripts, git, etc. JANGAN pakai untuk gradlew build APK.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -629,9 +755,52 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "github_status",
+            "description": "Cek status GitHub repo dari Pengaturan (username/token/repo) dan status git lokal. Jangan minta token di chat.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Optional workspace path, default current workspace"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "github_push",
+            "description": "Kirim semua file dari workspace ke GitHub repo yang ada di Pengaturan. Token diambil dari Pengaturan, jangan taruh token di URL remote, pakai http.extraHeader. Jangan minta token di chat.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string", "description": "Commit message, optional"},
+                    "path": {"type": "string", "description": "Optional workspace path"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_image",
+            "description": "Generate gambar via /v1/images/generations. Untuk model sdxl/flux/lightning JANGAN pakai chat/completions. Simpan ke generated_images/.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {"type": "string", "description": "Prompt gambar"},
+                    "model": {"type": "string", "description": "Model image, contoh sdxl, flux, lightning, dall-e-3"},
+                    "size": {"type": "string", "description": "Ukuran, contoh 1024x1024"},
+                },
+                "required": ["prompt"],
+            },
+        },
+    },
 ]
 
-PLAN_TOOLS = {"list_dir", "read_file", "glob", "grep", "todo_write", "web_fetch", "web_search"}
+PLAN_TOOLS = {"list_dir", "read_file", "glob", "grep", "todo_write", "web_fetch", "web_search", "github_status"}
 BUILD_TOOLS = {t["function"]["name"] for t in TOOL_SCHEMAS}
 
 
@@ -673,6 +842,11 @@ def execute(name: str, args: dict[str, Any], workspace: str, session: dict[str, 
         msg, dsnaps = delete_path(workspace, args.get("path") or "")
         return msg, dsnaps
     if name == "bash":
+        cmd = (args.get("command") or "").strip()
+        # forbid gradlew build per instructions, but allow other bash
+        low = cmd.lower()
+        if "gradlew" in low and ("assemble" in low or "build" in low):
+            return "Dilarang: jangan compile Gradle di laptop/HP. Push ke GitHub, biar Actions yang build APK (Build Arka).", snaps
         timeout = min(180, max(5, int(args.get("timeout") or 60)))
         return run_bash(workspace, args.get("command") or "", timeout=timeout), snaps
     if name == "web_fetch":
@@ -686,4 +860,20 @@ def execute(name: str, args: dict[str, Any], workspace: str, session: dict[str, 
         items = args.get("items") or []
         session["todos"] = items
         return f"Todo: {len(items)} item", snaps
+    if name == "github_status":
+        ws = args.get("path") or workspace
+        return github_status_tool(ws), snaps
+    if name == "github_push":
+        ws = args.get("path") or workspace
+        msg, ds = github_push_tool(ws, args.get("message"))
+        return msg, ds
+    if name == "generate_image":
+        ws = workspace
+        prompt = args.get("prompt") or ""
+        model = args.get("model")
+        size = args.get("size") or "1024x1024"
+        if not prompt.strip():
+            return "Prompt kosong", snaps
+        msg, ds = generate_image_tool(ws, prompt, model=model, size=size)
+        return msg, ds
     return f"Tool tidak dikenal: {name}", snaps

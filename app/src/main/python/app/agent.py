@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import re
+import base64
+import time
 from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
@@ -32,19 +34,53 @@ def normalize_mode(mode: str) -> str:
     return "build"
 
 
+# ---- Image model handling ----
+IMAGE_KEYWORDS = [
+    "sdxl",
+    "flux",
+    "lightning",
+    "dall-e",
+    "dalle",
+    "stable-diffusion",
+    "sd3",
+    "kandinsky",
+    "midjourney",
+    "imagen",
+    "image-gen",
+]
+
+
+def is_image_model(mid: str) -> bool:
+    low = (mid or "").lower()
+    return any(k in low for k in IMAGE_KEYWORDS)
+
+
 def system_prompt(mode: str, workspace: str) -> str:
     agents = _agents_md(workspace)
     extra = f"\n\n# AGENTS.md\n{agents}" if agents else ""
     mode = normalize_mode(mode)
+
+    # Common rules for all modes - GitHub & APK
+    github_rules = (
+        "\n\n# GitHub & Build Rules (WAJIB)\n"
+        "- JANGAN pernah minta GitHub username / token / PAT di chat. Token sudah ada di Pengaturan (Pengaturan > GitHub). Gunakan tools github_status dan github_push.\n"
+        "- JANGAN taruh token di URL remote (jangan git remote add https://TOKEN@...). Pakai http.extraHeader Authorization Bearer.\n"
+        "- Untuk kirim file ke GitHub, pakai tool github_push. Untuk cek status, pakai github_status.\n"
+        "- JANGAN menjalankan ./gradlew, gradle build, atau compile APK di laptop/HP. APK di-build lewat GitHub Actions: push ke main, lalu Actions > Build Arka > Run workflow. Artifact Arka-apk.\n"
+        "- Default repo: Dien45/arka-android jika user belum isi.\n"
+        "- Saat generate gambar, JANGAN pakai /v1/chat/completions untuk model sdxl/flux/lightning. Pakai /v1/images/generations via tool generate_image.\n"
+    )
+
     if mode == "plan":
         return (
             "You are Arka, an AI coding agent in PLAN mode. "
-            "Read-only tools: list_dir, read_file, glob, grep, todo_write, web_fetch, web_search. "
+            "Read-only tools: list_dir, read_file, glob, grep, todo_write, web_fetch, web_search, github_status. "
             "Do not modify files or run shell commands that change state. "
             "You MAY look up docs on the internet. "
             "Explore the repo, then produce a clear implementation plan with files, steps, and risks. "
             f"Workspace: {workspace}."
             f"{extra}"
+            f"{github_rules}"
         )
     talk = (
         "While working, call tools immediately. Do not narrate plans. "
@@ -57,7 +93,7 @@ def system_prompt(mode: str, workspace: str) -> str:
         return (
             "You are Arka in AGENT mode — like a full desktop coding agent. "
             "You have tools: list_dir, read_file, write_file, edit_file, delete_path, glob, grep, "
-            "bash, web_fetch, web_search, download_url, todo_write. "
+            "bash, web_fetch, web_search, download_url, todo_write, github_status, github_push, generate_image. "
             "Be autonomous: explore the repo first, then do the work. Do not only describe steps. "
             "If the request is ambiguous, ask at most 1–2 short questions OR pick a reasonable default and continue. "
             "Search the web when you need docs or current facts. "
@@ -69,13 +105,16 @@ def system_prompt(mode: str, workspace: str) -> str:
             + "Reply in the user's language when they write in Indonesian. "
             f"Workspace: {workspace}."
             f"{extra}"
+            f"{github_rules}"
         )
     return (
         "You are Arka, an AI coding agent in BUILD mode with full project access. "
         "You MUST use tools instead of only describing what you would do. "
         "Capabilities: write_file / edit_file to write code; delete_path to remove files; "
         "bash to run commands that change the project (pip/npm install, tests, git, scripts); "
-        "web_fetch / web_search / download_url for the public internet. "
+        "web_fetch / web_search / download_url for the public internet; "
+        "github_push / github_status for GitHub (jangan minta token, jangan taruh token di URL remote); "
+        "generate_image for image generation via /v1/images/generations (jangan pakai chat/completions untuk sdxl/flux/lightning). "
         "Prefer edit_file for small patches and write_file for new files. "
         "Stay inside the workspace. Do not attempt to destroy the OS. "
         "Do not stop early. If the user asked for an app or many files, keep writing files "
@@ -86,6 +125,7 @@ def system_prompt(mode: str, workspace: str) -> str:
         + "Reply in the user's language when they write in Indonesian. "
         f"Workspace: {workspace}."
         f"{extra}"
+        f"{github_rules}"
     )
 
 
@@ -112,6 +152,8 @@ def sanitize_model(name: str) -> str:
 def _api_headers(settings: dict[str, Any]) -> dict[str, str]:
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     key = (settings.get("api_key") or "").strip()
+    if key.lower() == "tutup":
+        key = ""
     if key:
         headers["Authorization"] = f"Bearer {key}"
         headers["x-api-key"] = key
@@ -484,6 +526,53 @@ def _is_tool_error(err: str) -> bool:
     )
 
 
+async def _openai_image(settings: dict[str, Any], prompt: str, model: str, size: str = "1024x1024") -> dict[str, Any]:
+    """Call /v1/images/generations, never /chat/completions for sdxl/flux/lightning."""
+    base = _normalize_base(settings.get("api_base") or "")
+    if not base:
+        raise RuntimeError("API base kosong")
+    headers = _api_headers(settings)
+    model = sanitize_model(model)
+    if not model:
+        model = "sdxl"
+    # Try both endpoints
+    urls = [f"{base}/images/generations", f"{base[:-3] + '/v1/images/generations' if base.endswith('/v1') else base + '/v1/images/generations'}"]
+    # deduplicate
+    urls = list(dict.fromkeys(urls))
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "n": 1,
+        "size": size,
+        "response_format": "b64_json",
+    }
+    async with httpx.AsyncClient(timeout=90.0) as client:
+        last_err = ""
+        for url in urls:
+            try:
+                r = await client.post(url, headers=headers, json=payload)
+            except httpx.HTTPError as e:
+                last_err = str(e)
+                continue
+            if r.status_code < 400:
+                try:
+                    return r.json()
+                except ValueError:
+                    raise RuntimeError(f"Image API bukan JSON: {r.text[:300]}")
+            last_err = f"{r.status_code} {r.text[:800]}"
+            # if 400 and model not supported, try without model field (some providers)
+            if r.status_code in {400, 404}:
+                payload_no_model = {k: v for k, v in payload.items() if k != "model"}
+                try:
+                    r2 = await client.post(url, headers=headers, json=payload_no_model)
+                    if r2.status_code < 400:
+                        return r2.json()
+                    last_err = f"{r2.status_code} {r2.text[:800]}"
+                except httpx.HTTPError as e:
+                    last_err = str(e)
+        raise RuntimeError(format_api_error(400, last_err, model))
+
+
 async def _openai_chat(settings: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     base = _normalize_base(settings.get("api_base") or "")
     if not base:
@@ -492,6 +581,14 @@ async def _openai_chat(settings: dict[str, Any], payload: dict[str, Any]) -> dic
     payload = dict(payload)
     model = sanitize_model(str(payload.get("model") or settings.get("model") or ""))
     payload["model"] = model
+
+    # JANGAN kirim model gambar ke chat/completions
+    if is_image_model(model):
+        raise RuntimeError(
+            f"Model '{model}' adalah model gambar (sdxl/flux/lightning). "
+            "Jangan pakai /v1/chat/completions. Pakai /v1/images/generations via tool generate_image atau tombol 🖼."
+        )
+
     is_combo = model == "auto" or model.startswith(("auto/", "combo/")) or "/" not in model
     timeout = 180.0 if is_combo else 120.0
     async with httpx.AsyncClient(timeout=timeout) as client:
@@ -511,6 +608,9 @@ async def _openai_chat(settings: dict[str, Any], payload: dict[str, Any]) -> dic
         r = None
         err = ""
         for cand in names:
+            # skip image models in fallback
+            if is_image_model(cand):
+                continue
             body = dict(payload)
             body["model"] = cand
             r = await post(body)
@@ -543,6 +643,8 @@ async def _openai_chat(settings: dict[str, Any], payload: dict[str, Any]) -> dic
             tried = set(names)
             for mid, prov in members:
                 if mid in tried:
+                    continue
+                if is_image_model(mid):
                     continue
                 if prov in skip_prov or mid.lower().startswith(("antigravity/", "agy/")):
                     continue
@@ -612,8 +714,10 @@ def _demo_reply(user_text: str, workspace: str, mode: str) -> list[dict[str, Any
         return steps + [{"text": f"Mode demo: `{path}` — {msg}. Undo di toolbar jika salah hapus."}]
 
     if any(k in text for k in ("http://", "https://", "fetch", "unduh", "download", "cari ", "search")):
-        if "http://" in user_text or "https://" in user_text:
-            m = re.search(r"https?://\S+", user_text)
+        if "http://" in user_text or "https://":
+            import re as _re
+
+            m = _re.search(r"https?://\S+", user_text)
             url = m.group(0).rstrip(").,") if m else "https://example.com"
             result = tools.web_fetch(url)
             steps.append({"tool": "web_fetch", "args": {"url": url}, "result": result[:2000]})
@@ -698,12 +802,59 @@ async def run_agent(
 
     def note_file(name: str, args: dict[str, Any]) -> None:
         path = str(args.get("path") or "").strip()
-        if name in {"write_file", "edit_file", "download_url"} and path:
+        if name in {"write_file", "edit_file", "download_url", "generate_image"} and path:
             files_changed.append({"path": path, "action": name})
         elif name == "delete_path" and path:
             files_changed.append({"path": path, "action": "delete"})
 
-    if not settings.get("api_key"):
+    # If image model is selected, handle directly as image generation
+    if is_image_model(run_model):
+        yield {"type": "status", "data": {"phase": "image"}}
+        try:
+            data = await _openai_image(settings, user_text, run_model)
+            # save image
+            b64 = ""
+            url = ""
+            items = data.get("data") or []
+            if items:
+                b64 = items[0].get("b64_json") or ""
+                url = items[0].get("url") or ""
+            saved_path = ""
+            if b64:
+                gen_dir = Path(workspace) / "generated_images"
+                gen_dir.mkdir(parents=True, exist_ok=True)
+                fname = f"img_{int(time.time())}.png"
+                target = gen_dir / fname
+                target.write_bytes(base64.b64decode(b64))
+                saved_path = str(target.relative_to(Path(workspace))).replace("\\", "/")
+                turn_snaps.append({"path": str(target), "existed": False, "content": ""})
+                files_changed.append({"path": saved_path, "action": "generate_image"})
+                assistant_ui["text"] = f"Gambar dibuat: {saved_path}\n\nPrompt: {user_text[:300]}"
+                yield {"type": "text", "data": {"delta": assistant_ui["text"]}}
+            elif url:
+                # download
+                msg, snaps = tools.download_url(workspace, url, f"generated_images/img_{int(time.time())}.png")
+                turn_snaps.extend(snaps)
+                saved_path = "generated_images/img_..."
+                assistant_ui["text"] = f"Gambar dari URL: {url}\n{msg}"
+                yield {"type": "text", "data": {"delta": assistant_ui["text"]}}
+            else:
+                assistant_ui["text"] = f"Image API response: {json.dumps(data)[:1000]}"
+                yield {"type": "text", "data": {"delta": assistant_ui["text"]}}
+        except Exception as e:
+            yield {"type": "error", "data": {"message": str(e)}}
+            assistant_ui["text"] = f"Gagal generate gambar: {e}"
+        if turn_snaps:
+            session.setdefault("undo", []).append(turn_snaps)
+        session["last_files"] = files_changed
+        save_session(session)
+        yield {
+            "type": "done",
+            "data": {"title": session["title"], "todos": session.get("todos", []), "files_changed": files_changed},
+        }
+        return
+
+    if not settings.get("api_key") or str(settings.get("api_key")).lower() == "tutup":
         yield {"type": "status", "data": {"phase": "demo"}}
         for step in _demo_reply(user_text, workspace, mode):
             if sid in STOP:
@@ -754,9 +905,16 @@ async def run_agent(
     def looks_unfinished(text: str) -> bool:
         t = (text or "").lower()
         hints = (
-            "nanti saya lanjutkan", "akan saya lanjutkan nanti", "to be continued",
-            "i'll continue later", "i will continue later", "continue in the next",
-            "belum selesai", "tahap berikutnya", "coming next", "lanjut di sesi",
+            "nanti saya lanjutkan",
+            "akan saya lanjutkan nanti",
+            "to be continued",
+            "i'll continue later",
+            "i will continue later",
+            "continue in the next",
+            "belum selesai",
+            "tahap berikutnya",
+            "coming next",
+            "lanjut di sesi",
         )
         if any(h in t for h in hints):
             return True
@@ -772,8 +930,15 @@ async def run_agent(
         if low.count("baik") >= 2 and ("saya akan" in low or "mari saya" in low):
             return True
         cues = (
-            "saya akan", "mari saya", "saya lihat sudah", "let me ", "i'll ", "i will ",
-            "melanjutkan", "menyelesaikan semua file", "lengkapi semua file",
+            "saya akan",
+            "mari saya",
+            "saya lihat sudah",
+            "let me ",
+            "i'll ",
+            "i will ",
+            "melanjutkan",
+            "menyelesaikan semua file",
+            "lengkapi semua file",
         )
         if any(c in low for c in cues) and not re.search(r"(^|\n)\s*(- |\d+\.|## )", t):
             return True
