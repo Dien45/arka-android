@@ -1164,19 +1164,32 @@ if ($("pickFolderBtn")) {
 }
 if ($("saveSettings")) {
   $("saveSettings").addEventListener("click", async () => {
+    const newModelRaw = $("cfgModel") ? $("cfgModel").value.trim() : "";
+    const newModel = sanitizeModel(newModelRaw);
     try {
       await api("/api/settings", {
         method: "PUT",
         body: JSON.stringify({
           workspace: $("cfgWorkspace") ? $("cfgWorkspace").value.trim() : undefined,
           api_base: $("cfgBase") ? $("cfgBase").value.trim() : undefined,
-          model: $("cfgModel") ? $("cfgModel").value.trim() : undefined,
+          model: newModelRaw ? newModelRaw : undefined,
           api_key: $("cfgKey") ? $("cfgKey").value.trim() : undefined,
           github_username: $("cfgGithubUser") ? $("cfgGithubUser").value.trim() : undefined,
           github_token: $("cfgGithubToken") ? $("cfgGithubToken").value.trim() : undefined,
           github_repo: $("cfgGithubRepo") ? $("cfgGithubRepo").value.trim() : undefined,
         }),
       });
+      // FIX: kalau model diganti di Pengaturan (misal gemma-4-26b), update juga sesi yang sedang aktif
+      // Karena activeModel() = session.model || settings.model, kalau session masih auto/coding, chat tetap pakai auto/coding
+      if (newModel && state.session) {
+        try {
+          await api(`/api/sessions/${state.session.id}`, { method: "PATCH", body: JSON.stringify({ model: newModel }) });
+          state.session.model = newModel;
+        } catch (e) {
+          console.warn("gagal patch sesi model", e);
+        }
+      }
+      if (newModel && state.settings) state.settings.model = newModel;
     } catch (e) {
       alert(e.message || String(e));
       return;
@@ -1184,6 +1197,7 @@ if ($("saveSettings")) {
     await loadSettings();
     await loadTree();
     if ($("settingsModal")) $("settingsModal").hidden = true;
+    syncModelChip();
     loadModels().catch(() => {});
   });
 }
@@ -1236,33 +1250,76 @@ const SEED_MODELS = ["auto", "auto/coding", "auto/fast", "auto/cheap", "auto/qua
 
 function ensureSeedModels() {
   const have = new Set(state.models || []);
-  const extra = SEED_MODELS.filter((id) => !have.has(id));
+  const extra = [];
+  for (const id of SEED_MODELS) if (!have.has(id)) { extra.push(id); have.add(id); }
+  // FIX: pastikan model custom dari settings/sesi (misal gemma-4-26b dari API luar) tetap muncul di list, bukan cuma auto/coding
+  const custom = [state.settings && state.settings.model, state.session && state.session.model, $("cfgModel") && $("cfgModel").value].map(sanitizeModel).filter(Boolean);
+  for (const id of custom) if (!have.has(id)) { extra.push(id); have.add(id); }
   if (extra.length) state.models = extra.concat(state.models || []);
 }
 
 function fillModelDatalist() {
   ensureSeedModels();
-  const sel = $("cfgModelSelect");
-  if (sel) {
-    const cur = ($("cfgModel") && $("cfgModel").value) || "";
-    sel.innerHTML = (state.models || []).slice(0, 500).map((id) => {
-      const on = id === cur ? " selected" : "";
-      return `<option value="${esc(id)}"${on}>${esc(id)}</option>`;
-    }).join("");
-  }
   const box = $("cfgModelBox");
   if (!box) return;
+  const curInput = ($("cfgModel") && $("cfgModel").value) || "";
+  const q = curInput.toLowerCase().trim();
+  const current = activeModel();
+  // filter untuk satu list saja, biar tidak penuh dobel
+  let items = state.models || [];
+  if (q) {
+    items = items.filter((id) => {
+      if (id.toLowerCase().includes(q)) return true;
+      const meta = (state.modelItems || []).find((m) => m.id === id);
+      return meta && String(meta.name || "").toLowerCase().includes(q);
+    });
+  }
+  // sort: combo dulu, model biasa, image terakhir biar rapi
+  items = items.slice().sort((a, b) => {
+    const ma = (state.modelItems || []).find((m) => m.id === a) || {};
+    const mb = (state.modelItems || []).find((m) => m.id === b) || {};
+    const ta = ma.type === "combo" ? 0 : ma.type === "image" ? 2 : 1;
+    const tb = mb.type === "combo" ? 0 : mb.type === "image" ? 2 : 1;
+    return ta - tb;
+  });
+  const shown = items.slice(0, 120);
   box.innerHTML = "";
-  for (const id of (state.models || []).slice(0, 80)) {
+  if (!shown.length) {
+    const hint = document.createElement("div");
+    hint.className = "muted sm";
+    hint.style.padding = "8px";
+    hint.textContent = q ? `Tidak ada model cocok "${q}". Enter untuk pakai ID custom.` : "Belum ada daftar. Klik Muat daftar model dari API.";
+    box.appendChild(hint);
+    if (q) {
+      const use = document.createElement("button");
+      use.type = "button";
+      use.textContent = "Pakai ID: " + sanitizeModel(curInput);
+      use.addEventListener("click", () => pickModel(sanitizeModel(curInput)));
+      box.appendChild(use);
+    }
+    return;
+  }
+  for (const id of shown) {
     const meta = (state.modelItems || []).find((m) => m.id === id) || {};
     const b = document.createElement("button");
     b.type = "button";
+    b.className = id === current ? "on" : "";
     b.textContent = (meta.type === "combo" ? "combo · " : "") + (meta.type === "image" ? "🖼 " : "") + id;
+    b.title = id + (meta.name ? ` — ${meta.name}` : "");
     b.addEventListener("click", () => {
       if ($("cfgModel")) $("cfgModel").value = id;
       pickModel(id);
+      // update filter setelah pilih
+      fillModelDatalist();
     });
     box.appendChild(b);
+  }
+  if (items.length > shown.length) {
+    const more = document.createElement("div");
+    more.className = "muted sm";
+    more.style.padding = "8px";
+    more.textContent = `Menampilkan ${shown.length} dari ${items.length}. Ketik di input Model untuk filter.`;
+    box.appendChild(more);
   }
 }
 
@@ -1406,11 +1463,17 @@ if ($("modelChip") && $("modelMenu")) {
     menu.hidden = true;
   });
 }
-if ($("cfgModelSelect")) {
-  $("cfgModelSelect").addEventListener("change", () => {
-    const id = $("cfgModelSelect").value;
-    if ($("cfgModel")) $("cfgModel").value = id;
-    pickModel(id);
+// cfgModelSelect dihapus — sekarang satu list saja di cfgModelBox biar tidak penuh dobel
+// filter list pengaturan saat ketik model custom (misal gemma-4-26b)
+if ($("cfgModel")) {
+  $("cfgModel").addEventListener("input", () => {
+    fillModelDatalist();
+  });
+  $("cfgModel").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      pickModel($("cfgModel").value);
+    }
   });
 }
 if ($("modelSearch")) {

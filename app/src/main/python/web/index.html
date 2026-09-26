@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Arka</title>
-  <link rel="stylesheet" href="/static/styles.css?v=arka29" />
+  <link rel="stylesheet" href="/static/styles.css?v=arka30" />
 </head>
 <body>
   <div id="app">
@@ -39,7 +39,7 @@
           <div class="model-wrap">
             <button class="model-chip" id="modelChip" type="button" title="Pilih model">gpt-4o-mini ▾</button>
             <div class="model-menu" id="modelMenu" hidden>
-              <input id="modelSearch" placeholder="Cari model OmniRoute…" autocomplete="off" />
+              <input id="modelSearch" placeholder="Cari model (gemma, gpt, sdxl)…" autocomplete="off" />
               <div class="model-list" id="modelList"></div>
               <div class="model-menu-foot">
                 <button class="btn ghost xs" type="button" id="refreshModels">Muat daftar</button>
@@ -143,32 +143,24 @@
         <button type="button" data-base="http://127.0.0.1:11434/v1" data-model="llama3.1">Ollama</button>
       </div>
 
-      <!-- API key di atas list model -->
       <label>API key
         <input id="cfgKey" type="password" placeholder="sk-… (kosong = mode demo)" />
       </label>
 
-      <label>Model
-        <input id="cfgModel" placeholder="auto/coding atau tempel ID (sdxl/flux untuk gambar)" autocomplete="off" />
+      <label>Model (ketik custom, misal gemma-4-26b)
+        <input id="cfgModel" placeholder="gemma-4-26b, gpt-4o-mini, sdxl, flux" autocomplete="off" />
       </label>
-      <select id="cfgModelSelect" size="6" class="model-select">
-        <option value="auto">auto</option>
-        <option value="auto/coding">auto/coding</option>
-        <option value="auto/fast">auto/fast</option>
-        <option value="auto/cheap">auto/cheap</option>
-        <option value="auto/quality">auto/quality</option>
-        <option value="sdxl">sdxl (gambar)</option>
-        <option value="flux">flux (gambar)</option>
-        <option value="flux-lightning">flux-lightning (gambar)</option>
-      </select>
-      <button class="btn ghost block" type="button" id="loadModels" style="margin: 8px 0 10px;">Muat daftar model dari API</button>
-      <div class="model-list settings-models" id="cfgModelBox"></div>
-      <p class="muted sm" id="cfgModelHint">Pilih dari list, atau ketik ID. Muat daftar = ambil dari OmniRoute (laptop harus nyala). Model sdxl/flux/lightning akan pakai /v1/images/generations, bukan chat/completions.</p>
+      <!-- SATU LIST SAJA, tidak dobel -->
+      <div style="display:flex;gap:8px;margin:6px 0 8px">
+        <button class="btn ghost block" type="button" id="loadModels" style="margin:0">Muat daftar model dari API</button>
+        <span class="muted sm" id="cfgModelHint" style="align-self:center">Ketik ID custom atau pilih di bawah. sdxl/flux pakai /v1/images/generations.</span>
+      </div>
+      <div class="model-list settings-models" id="cfgModelBox" style="max-height:260px"></div>
 
       <hr style="border:0;border-top:1px solid var(--line);margin:16px 0" />
 
       <h3 style="margin:0 0 8px">GitHub</h3>
-      <p class="muted sm">Untuk tombol "Kirim semua file ke GitHub". Default repo: Dien45/arka-android. Jangan taruh token di URL remote, pakai Bearer header.</p>
+      <p class="muted sm">Untuk tombol "Kirim semua file ke GitHub". Default repo: Dien45/arka-android. Jangan taruh token di URL remote.</p>
       <label>GitHub Username
         <input id="cfgGithubUser" placeholder="Dien45" />
       </label>
@@ -191,12 +183,13 @@
     </div>
   </div>
 
+  <!-- Menu HP: ☰ sesi, ⋮ pengaturan — fixed, z-index tinggi -->
   <div class="more-menu" id="moreMenu" hidden>
-    <button type="button" data-act="settings">Pengaturan</button>
-    <button type="button" data-act="model">Pilih model</button>
-    <button type="button" data-act="image">Generate gambar 🖼</button>
-    <button type="button" data-act="copy">Salin chat</button>
-    <button type="button" data-act="undo">Undo file</button>
+    <button type="button" data-act="settings">⚙ Pengaturan</button>
+    <button type="button" data-act="model">🧠 Pilih model</button>
+    <button type="button" data-act="image">🖼 Generate gambar</button>
+    <button type="button" data-act="copy">📋 Salin chat</button>
+    <button type="button" data-act="undo">↩ Undo file</button>
   </div>
 
   <div class="preview-overlay" id="previewOverlay" hidden>
@@ -207,7 +200,6 @@
     <iframe id="overlayFrame" title="overlay"></iframe>
   </div>
 
-  <!-- Image gen modal -->
   <div class="modal" id="imageModal" hidden>
     <div class="sheet">
       <h2>Generate Gambar 🖼</h2>
@@ -234,6 +226,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=arka29"></script>
+  <script src="/static/app.js?v=arka30"></script>
 </body>
 </html>

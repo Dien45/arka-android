@@ -353,8 +353,11 @@ def looks_like_combo_id(model: str) -> bool:
         return False
     if s == "auto" or s.startswith(("auto/", "combo/")):
         return True
-    if " " in s or "/" not in s:
+    # Jika ada spasi, itu nama combo display, bukan id model real (misal "My Coding Combo")
+    if " " in s:
         return True
+    # FIX untuk API luar (gemma-4-26b, gpt-4o-mini, claude-3): model tanpa "/" adalah model real, bukan combo
+    # Hanya auto/combo yang dianggap combo, sisanya model asli
     return False
 
 
